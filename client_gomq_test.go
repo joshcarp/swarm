@@ -163,7 +163,7 @@ func (s *testServer) close() {
 }
 
 func (s *testServer) start() {
-	go s.bind()
+	go s.bind() //nolint:errcheck
 }
 
 func TestPingPong(t *testing.T) {
@@ -181,7 +181,7 @@ func TestPingPong(t *testing.T) {
 
 	// start client
 	client := newClient(masterHost, masterPort, "testing ping pong")
-	client.connect()
+	_ = client.connect()
 	defer client.close()
 
 	time.Sleep(20 * time.Millisecond)

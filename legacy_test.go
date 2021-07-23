@@ -24,8 +24,8 @@ func TestConvertResponseTime(t *testing.T) {
 
 func TestInitEvents(t *testing.T) {
 	initLegacyEventHandlers()
-	defer Events.Unsubscribe("request_success", legacySuccessHandler)
-	defer Events.Unsubscribe("request_failure", legacyFailureHandler)
+	defer Events.Unsubscribe("request_success", legacySuccessHandler) //nolint:errcheck
+	defer Events.Unsubscribe("request_failure", legacyFailureHandler) //nolint:errcheck
 
 	masterHost := "127.0.0.1"
 	masterPort := 5557

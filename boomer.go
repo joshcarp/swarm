@@ -248,13 +248,13 @@ func Run(tasks ...Tasker) {
 	quitByMe := false
 	quitChan := make(chan bool)
 
-	Events.SubscribeOnce("boomer:quit", func() {
+	_ = Events.SubscribeOnce("boomer:quit", func() {
 		if !quitByMe {
 			close(quitChan)
 		}
 	})
 
-	c := make(chan os.Signal)
+	c := make(chan os.Signal, 1)
 	signal.Notify(c, syscall.SIGINT, syscall.SIGTERM)
 
 	select {

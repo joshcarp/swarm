@@ -72,8 +72,8 @@ func legacyFailureHandler(requestType string, name string, responseTime interfac
 }
 
 func initLegacyEventHandlers() {
-	Events.Subscribe("request_success", legacySuccessHandler)
-	Events.Subscribe("request_failure", legacyFailureHandler)
+	_ = Events.Subscribe("request_success", legacySuccessHandler)
+	_ = Events.Subscribe("request_failure", legacyFailureHandler)
 }
 
 func init() {

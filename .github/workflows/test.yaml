@@ -1,0 +1,13 @@
+on: [ push ]
+name: Test
+jobs:
+  test:
+    strategy:
+      matrix:
+        platform: [ ubuntu-latest ]
+    runs-on: ${{ matrix.platform }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+      - name: Test
+        run: docker run -v $(pwd):/src/app golang:buster sh -c "cd /src/app && go test ./..."

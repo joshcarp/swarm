@@ -335,8 +335,8 @@ func TestStop(t *testing.T) {
 	handler := func() {
 		stopped = true
 	}
-	Events.Subscribe("boomer:stop", handler)
-	defer Events.Unsubscribe("boomer:stop", handler)
+	_ = Events.Subscribe("boomer:stop", handler)
+	defer Events.Unsubscribe("boomer:stop", handler) //nolint:errcheck
 
 	runner.stop()
 
@@ -361,16 +361,13 @@ func TestOnSpawnMessage(t *testing.T) {
 		workers = param1
 		spawnRate = param2
 	}
-	Events.Subscribe("boomer:spawn", callback)
-	defer Events.Unsubscribe("boomer:spawn", callback)
+	_ = Events.Subscribe("boomer:spawn", callback)
+	defer Events.Unsubscribe("boomer:spawn", callback) //nolint:errcheck
 
 	go func() {
 		// consumes clearStatsChannel
-		for {
-			select {
-			case <-runner.stats.clearStatsChan:
-				return
-			}
+		for <-runner.stats.clearStatsChan {
+			return
 		}
 	}()
 
@@ -399,8 +396,8 @@ func TestOnQuitMessage(t *testing.T) {
 	receiver := func() {
 		quitMessages <- true
 	}
-	Events.Subscribe("boomer:quit", receiver)
-	defer Events.Unsubscribe("boomer:quit", receiver)
+	_ = Events.Subscribe("boomer:quit", receiver)
+	defer Events.Unsubscribe("boomer:quit", receiver) //nolint:errcheck
 	var ticker = time.NewTicker(20 * time.Millisecond)
 
 	runner.onMessage(newMessage("quit", nil, runner.nodeID))
@@ -461,7 +458,7 @@ func TestOnMessage(t *testing.T) {
 	go func() {
 		// consumes clearStatsChannel
 		count := 0
-		for {
+		for { //nolint:gosimple
 			select {
 			case <-runner.stats.clearStatsChan:
 				// receive two spawn message from master
@@ -584,7 +581,7 @@ func TestGetReady(t *testing.T) {
 	rateLimiter := NewStableRateLimiter(100, time.Second)
 	r := newSlaveRunner(masterHost, masterPort, nil, rateLimiter)
 	defer r.close()
-	defer Events.Unsubscribe("boomer:quit", r.onQuiting)
+	defer Events.Unsubscribe("boomer:quit", r.onQuiting) //nolint:errcheck
 
 	r.run()
 
@@ -625,15 +622,12 @@ func TestEarlyStop(t *testing.T) {
 	go func() {
 		// consumes clearStatsChannel
 		count := 0
-		for {
-			select {
-			case <-runner.stats.clearStatsChan:
-				// receive two spawn message from master
-				if count >= 2 {
-					return
-				}
-				count++
+		for <-runner.stats.clearStatsChan {
+			// receive two spawn message from master
+			if count >= 2 {
+				return
 			}
+			count++
 		}
 	}()
 

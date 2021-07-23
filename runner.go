@@ -26,7 +26,7 @@ const (
 )
 
 type runner struct {
-	state string
+	state string //nolint:structcheck
 
 	tasks           []Tasker
 	totalTaskWeight int
@@ -43,7 +43,7 @@ type runner struct {
 	stopChan chan bool
 
 	// close this channel will stop all goroutines used in runner.
-	closeChan chan bool
+	closeChan chan bool //nolint:structcheck
 
 	outputs []Output
 }
@@ -471,5 +471,5 @@ func (r *slaveRunner) run() {
 		}
 	}()
 
-	Events.Subscribe("boomer:quit", r.onQuiting)
+	_ = Events.Subscribe("boomer:quit", r.onQuiting)
 }

@@ -106,7 +106,7 @@ type RampUpRateLimiter struct {
 	rampUpStep       int64
 	rampUpPeroid     time.Duration
 	broadcastChannel chan bool
-	rampUpChannel    chan bool
+	rampUpChannel    chan bool //nolint:unused,structcheck
 	quitChannel      chan bool
 }
 

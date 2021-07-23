@@ -34,7 +34,7 @@ func round(val float64, roundOn float64, places int) (newVal float64) {
 func MD5(slice ...string) string {
 	h := md5.New()
 	for _, v := range slice {
-		io.WriteString(h, v)
+		_, _ = io.WriteString(h, v)
 	}
 	return fmt.Sprintf("%x", h.Sum(nil))
 }
