@@ -1,6 +1,6 @@
 // +build goczmq
 
-package boomer
+package swarm
 
 import (
 	"fmt"

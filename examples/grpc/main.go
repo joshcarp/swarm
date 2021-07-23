@@ -7,7 +7,7 @@ import (
 	"time"
 
 	"github.com/bugVanisher/grequester"
-	"github.com/myzhan/boomer"
+	"github.com/joshcarp/swarm"
 )
 
 var verbose = false
@@ -42,10 +42,10 @@ func rpcReq() {
 		if verbose {
 			log.Printf("%v\n", err)
 		}
-		boomer.RecordFailure("rpc", "error", 0.0, err.Error())
+		swarm.RecordFailure("rpc", "error", 0.0, err.Error())
 	} else {
 		// make your assertion
-		boomer.RecordSuccess("rpc", "succ",
+		swarm.RecordSuccess("rpc", "succ",
 			elapsed.Nanoseconds()/int64(time.Millisecond), int64(len(resp.String())))
 		if verbose {
 			if err != nil {
@@ -75,11 +75,11 @@ func main() {
 	// init requester
 	client = grequester.NewRequester(addr, service, method, timeout, poolsize)
 
-	task := &boomer.Task{
+	task := &swarm.Task{
 		Name:   "rpcReq",
 		Weight: 10,
 		Fn:     rpcReq,
 	}
 
-	boomer.Run(task)
+	swarm.Run(task)
 }

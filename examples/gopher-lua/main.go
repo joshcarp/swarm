@@ -16,7 +16,7 @@ import (
 
 	"github.com/yuin/gopher-lua/parse"
 
-	"github.com/myzhan/boomer"
+	"github.com/joshcarp/swarm"
 	lua "github.com/yuin/gopher-lua"
 )
 
@@ -28,7 +28,7 @@ import (
 var script string
 var compiledScript *lua.FunctionProto
 var httpClient *http.Client
-var globalBoomer = boomer.NewBoomer("127.0.0.1", 5557)
+var globalBoomer = swarm.NewBoomer("127.0.0.1", 5557)
 
 func initHTTPClient() {
 	http.DefaultTransport.(*http.Transport).MaxIdleConnsPerHost = 2000
@@ -138,7 +138,7 @@ func waitForQuit() {
 		wg.Done()
 	}()
 
-	boomer.Events.Subscribe("boomer:quit", func() {
+	swarm.Events.Subscribe("boomer:quit", func() {
 		if !quitByMe {
 			wg.Done()
 		}
@@ -175,7 +175,7 @@ func main() {
 
 	initHTTPClient()
 
-	task := &boomer.Task{
+	task := &swarm.Task{
 		Name: "lua",
 		Fn:   luaHTTP,
 	}

@@ -1,4 +1,4 @@
-package boomer
+package swarm
 
 // Task is like the "Locust object" in locust, the python version.
 // When boomer receives a start message from master, it will spawn several goroutines to run Task.Fn.

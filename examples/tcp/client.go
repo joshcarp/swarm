@@ -7,7 +7,7 @@ import (
 	"net"
 	"time"
 
-	"github.com/myzhan/boomer"
+	"github.com/joshcarp/swarm"
 )
 
 var bindHost string
@@ -37,12 +37,12 @@ func worker() {
 			n, err := conn.Write([]byte("hello"))
 			elapsed := time.Since(start)
 			if err != nil {
-				boomer.RecordFailure("tcp", "write failure", elapsed.Nanoseconds()/int64(time.Millisecond), err.Error())
+				swarm.RecordFailure("tcp", "write failure", elapsed.Nanoseconds()/int64(time.Millisecond), err.Error())
 				continue
 			}
 			// len("hello") == 5
 			if n != 5 {
-				boomer.RecordFailure("tcp", "write mismatch", elapsed.Nanoseconds()/int64(time.Millisecond), "write mismatch")
+				swarm.RecordFailure("tcp", "write mismatch", elapsed.Nanoseconds()/int64(time.Millisecond), "write mismatch")
 				continue
 			}
 
@@ -50,16 +50,16 @@ func worker() {
 			n, err = conn.Read(readBuff)
 			elapsed = time.Since(start)
 			if err != nil {
-				boomer.RecordFailure("tcp", "read failure", elapsed.Nanoseconds()/int64(time.Millisecond), err.Error())
+				swarm.RecordFailure("tcp", "read failure", elapsed.Nanoseconds()/int64(time.Millisecond), err.Error())
 				continue
 			}
 
 			if n != 5 {
-				boomer.RecordFailure("tcp", "read mismatch", elapsed.Nanoseconds()/int64(time.Millisecond), "read mismatch")
+				swarm.RecordFailure("tcp", "read mismatch", elapsed.Nanoseconds()/int64(time.Millisecond), "read mismatch")
 				continue
 			}
 
-			boomer.RecordSuccess("tcp", "success", elapsed.Nanoseconds()/int64(time.Millisecond), 5)
+			swarm.RecordSuccess("tcp", "success", elapsed.Nanoseconds()/int64(time.Millisecond), 5)
 		}
 	}
 }
@@ -69,26 +69,26 @@ func main() {
 
 	flag.Parse()
 
-	task := &boomer.Task{
+	task := &swarm.Task{
 		Name:   "tcp",
 		Weight: 10,
 		Fn:     worker,
 	}
 
-	boomer.Events.Subscribe("boomer:spawn", func(workers int, spawnRate float64) {
+	swarm.Events.Subscribe("boomer:spawn", func(workers int, spawnRate float64) {
 		stopChannel = make(chan bool)
 	})
 
-	boomer.Events.Subscribe("boomer:stop", func() {
+	swarm.Events.Subscribe("boomer:stop", func() {
 		close(stopChannel)
 	})
 
-	boomer.Events.Subscribe("boomer:quit", func() {
+	swarm.Events.Subscribe("boomer:quit", func() {
 		close(stopChannel)
 		time.Sleep(time.Second)
 	})
 
-	boomer.Run(task)
+	swarm.Run(task)
 }
 
 func init() {

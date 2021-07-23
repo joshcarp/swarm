@@ -7,7 +7,7 @@ import (
 	"plugin"
 	"strings"
 
-	"github.com/myzhan/boomer"
+	"github.com/joshcarp/swarm"
 )
 
 // Trying to implement boomer-cli without any test scenarios
@@ -15,7 +15,7 @@ import (
 
 var plugins string
 
-func createTask(pluginPath string) (task *boomer.Task, err error) {
+func createTask(pluginPath string) (task *swarm.Task, err error) {
 	if _, err := os.Stat(pluginPath); os.IsNotExist(err) {
 		return nil, err
 	}
@@ -23,7 +23,7 @@ func createTask(pluginPath string) (task *boomer.Task, err error) {
 	if err != nil {
 		return nil, err
 	}
-	task = &boomer.Task{}
+	task = &swarm.Task{}
 	getName, err := loadedPlugin.Lookup("GetName")
 	if err != nil {
 		log.Println(err)
@@ -52,7 +52,7 @@ func main() {
 		flag.Parse()
 	}
 	plugins := strings.Split(plugins, ",")
-	tasks := make([]*boomer.Task, 0)
+	tasks := make([]*swarm.Task, 0)
 	for _, plugin := range plugins {
 		task, err := createTask(plugin)
 		if err != nil {
@@ -67,7 +67,7 @@ func main() {
 		log.Fatalln("No valid plugin found, exit now.")
 	}
 
-	boomer.Run(tasks...)
+	swarm.Run(tasks...)
 }
 
 func init() {

@@ -8,7 +8,7 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/myzhan/boomer"
+	"github.com/joshcarp/swarm"
 )
 
 func foo() {
@@ -36,18 +36,18 @@ func waitForQuit() {
 	wg.Wait()
 }
 
-var globalBoomer = boomer.NewBoomer("127.0.0.1", 5557)
+var globalBoomer = swarm.NewBoomer("127.0.0.1", 5557)
 
 func main() {
 	log.SetFlags(log.LstdFlags | log.Lshortfile)
 
-	task1 := &boomer.Task{
+	task1 := &swarm.Task{
 		Name:   "foo",
 		Weight: 10,
 		Fn:     foo,
 	}
 
-	ratelimiter, _ := boomer.NewRampUpRateLimiter(1000, "100/1s", time.Second)
+	ratelimiter, _ := swarm.NewRampUpRateLimiter(1000, "100/1s", time.Second)
 	log.Println("the max rps is limited to 1000/s, with a rampup rate 100/1s.")
 	globalBoomer.SetRateLimiter(ratelimiter)
 

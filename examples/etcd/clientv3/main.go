@@ -5,8 +5,8 @@ import (
 	"log"
 	"time"
 
-	"github.com/myzhan/boomer"
-	"go.etcd.io/etcd/clientv3"
+	"github.com/joshcarp/swarm"
+	clientv3 "go.etcd.io/etcd/client/v3"
 )
 
 var globalClient *clientv3.Client
@@ -18,9 +18,9 @@ func worker() {
 	resp, err := globalClient.Put(ctx, "hello", "boomer")
 	elapsed := time.Since(start)
 	if err != nil {
-		boomer.RecordFailure("etcd", "put", elapsed.Nanoseconds()/int64(time.Millisecond), err.Error())
+		swarm.RecordFailure("etcd", "put", elapsed.Nanoseconds()/int64(time.Millisecond), err.Error())
 	} else {
-		boomer.RecordSuccess("etcd", "put", elapsed.Nanoseconds()/int64(time.Millisecond), int64(resp.Header.Size()))
+		swarm.RecordSuccess("etcd", "put", elapsed.Nanoseconds()/int64(time.Millisecond), int64(resp.Header.Size()))
 	}
 
 	cancel()
@@ -35,10 +35,10 @@ func main() {
 
 	globalClient = client
 
-	task := &boomer.Task{
+	task := &swarm.Task{
 		Name: "etcd/clientv3",
 		Fn:   worker,
 	}
 
-	boomer.Run(task)
+	swarm.Run(task)
 }

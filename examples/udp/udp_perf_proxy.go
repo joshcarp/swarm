@@ -6,7 +6,7 @@ import (
 	"net"
 	"time"
 
-	"github.com/myzhan/boomer"
+	"github.com/joshcarp/swarm"
 )
 
 //                            +------------+
@@ -69,22 +69,22 @@ func newWorker(remoteAddr string) *worker {
 				startTime := time.Now()
 				wn, err := conn.Write(req)
 				if err != nil {
-					boomer.RecordFailure(name, "udp-write", 0.0, err.Error())
+					swarm.RecordFailure(name, "udp-write", 0.0, err.Error())
 					continue
 				}
 
 				if *dontRead {
 					elapsed := time.Since(startTime)
-					boomer.RecordSuccess(name, "udp-write", elapsed.Nanoseconds()/int64(time.Millisecond), int64(wn))
+					swarm.RecordSuccess(name, "udp-write", elapsed.Nanoseconds()/int64(time.Millisecond), int64(wn))
 				} else {
 					conn.SetReadDeadline(time.Now().Add(backendTimeout))
 					respLength, err := conn.Read(recvBuff)
 					if err != nil {
-						boomer.RecordFailure(name, "udp-read", 0.0, err.Error())
+						swarm.RecordFailure(name, "udp-read", 0.0, err.Error())
 						continue
 					}
 					elapsed := time.Since(startTime)
-					boomer.RecordSuccess(name, "udp-resp", elapsed.Nanoseconds()/int64(time.Millisecond), int64(respLength))
+					swarm.RecordSuccess(name, "udp-resp", elapsed.Nanoseconds()/int64(time.Millisecond), int64(respLength))
 				}
 			}
 		}
@@ -156,10 +156,10 @@ func deadend() {
 }
 
 func main() {
-	boomer.Events.Subscribe("boome:spawn", startTest)
-	boomer.Events.Subscribe("boomer:stop", stopTest)
+	swarm.Events.Subscribe("boome:spawn", startTest)
+	swarm.Events.Subscribe("boomer:stop", stopTest)
 
-	task := &boomer.Task{
+	task := &swarm.Task{
 		Name:   "udproxy",
 		Weight: 10,
 		Fn:     deadend,
@@ -167,7 +167,7 @@ func main() {
 
 	go proxy()
 
-	boomer.Run(task)
+	swarm.Run(task)
 }
 
 func init() {

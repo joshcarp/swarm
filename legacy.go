@@ -1,6 +1,6 @@
 // This file is kept to ensure backward compatibility.
 
-package boomer
+package swarm
 
 import (
 	"flag"

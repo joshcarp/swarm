@@ -8,7 +8,7 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/myzhan/boomer"
+	"github.com/joshcarp/swarm"
 )
 
 func waitForQuit() {
@@ -25,7 +25,7 @@ func waitForQuit() {
 		wg.Done()
 	}()
 
-	boomer.Events.Subscribe("boomer:quit", func() {
+	swarm.Events.Subscribe("boomer:quit", func() {
 		if !quitByMe {
 			wg.Done()
 		}
@@ -34,14 +34,14 @@ func waitForQuit() {
 	wg.Wait()
 }
 
-var globalBoomer = boomer.NewBoomer("127.0.0.1", 5557)
+var globalBoomer = swarm.NewBoomer("127.0.0.1", 5557)
 
 func main() {
 	log.SetFlags(log.LstdFlags | log.Lshortfile)
 
-	ts := boomer.NewWeighingTaskSet()
+	ts := swarm.NewWeighingTaskSet()
 
-	taskA := &boomer.Task{
+	taskA := &swarm.Task{
 		Name:   "TaskA",
 		Weight: 10,
 		Fn: func() {
@@ -50,7 +50,7 @@ func main() {
 		},
 	}
 
-	taskB := &boomer.Task{
+	taskB := &swarm.Task{
 		Name:   "TaskB",
 		Weight: 20,
 		Fn: func() {
@@ -63,7 +63,7 @@ func main() {
 	ts.AddTask(taskA)
 	ts.AddTask(taskB)
 
-	task := &boomer.Task{
+	task := &swarm.Task{
 		Name: "TaskSet",
 		Fn:   ts.Run,
 	}

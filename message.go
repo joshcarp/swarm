@@ -1,4 +1,4 @@
-package boomer
+package swarm
 
 import (
 	"github.com/ugorji/go/codec"

@@ -1,4 +1,4 @@
-package boomer
+package swarm
 
 import (
 	"flag"
@@ -73,7 +73,7 @@ func (b *Boomer) SetRateLimiter(rateLimiter RateLimiter) {
 	b.rateLimiter = rateLimiter
 }
 
-// SetMode only accepts boomer.DistributedMode and boomer.StandaloneMode.
+// SetMode only accepts swarm.DistributedMode and swarm.StandaloneMode.
 func (b *Boomer) SetMode(mode Mode) {
 	switch mode {
 	case DistributedMode:
@@ -85,7 +85,7 @@ func (b *Boomer) SetMode(mode Mode) {
 	}
 }
 
-// AddOutput accepts outputs which implements the boomer.Output interface.
+// AddOutput accepts outputs which implements the swarm.Output interface.
 func (b *Boomer) AddOutput(o Output) {
 	b.outputs = append(b.outputs, o)
 }

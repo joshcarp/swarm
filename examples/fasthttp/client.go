@@ -7,7 +7,7 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/myzhan/boomer"
+	"github.com/joshcarp/swarm"
 	"github.com/valyala/fasthttp"
 )
 
@@ -41,20 +41,20 @@ func worker() {
 	if err != nil {
 		switch err {
 		case fasthttp.ErrTimeout:
-			boomer.RecordFailure("http", "timeout", elapsed.Nanoseconds()/int64(time.Millisecond), err.Error())
+			swarm.RecordFailure("http", "timeout", elapsed.Nanoseconds()/int64(time.Millisecond), err.Error())
 		case fasthttp.ErrNoFreeConns:
 			// all Client.MaxConnsPerHost connections to the requested host are busy
 			// try to increase MaxConnsPerHost
-			boomer.RecordFailure("http", "connections all busy", elapsed.Nanoseconds()/int64(time.Millisecond), err.Error())
+			swarm.RecordFailure("http", "connections all busy", elapsed.Nanoseconds()/int64(time.Millisecond), err.Error())
 		default:
-			boomer.RecordFailure("http", "unknown", elapsed.Nanoseconds()/int64(time.Millisecond), err.Error())
+			swarm.RecordFailure("http", "unknown", elapsed.Nanoseconds()/int64(time.Millisecond), err.Error())
 		}
 		fasthttp.ReleaseRequest(req)
 		fasthttp.ReleaseResponse(resp)
 		return
 	}
 
-	boomer.RecordSuccess("http", strconv.Itoa(resp.StatusCode()), elapsed.Nanoseconds()/int64(time.Millisecond), int64(len(resp.Body())))
+	swarm.RecordSuccess("http", strconv.Itoa(resp.StatusCode()), elapsed.Nanoseconds()/int64(time.Millisecond), int64(len(resp.Body())))
 
 	if verbose {
 		log.Println(string(resp.Body()))
@@ -111,11 +111,11 @@ verbose: %t`, method, url, timeout, postFile, contentType, disableKeepalive, ver
 		MaxConnsPerHost: 2000,
 	}
 
-	task := &boomer.Task{
+	task := &swarm.Task{
 		Name:   "worker",
 		Weight: 10,
 		Fn:     worker,
 	}
 
-	boomer.Run(task)
+	swarm.Run(task)
 }

@@ -1,4 +1,4 @@
-package boomer
+package swarm
 
 type client interface {
 	connect() (err error)

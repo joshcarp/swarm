@@ -4,7 +4,7 @@ import (
 	"log"
 	"time"
 
-	"github.com/myzhan/boomer"
+	"github.com/joshcarp/swarm"
 )
 
 func foo() {
@@ -17,12 +17,12 @@ func foo() {
 	globalBoomer.RecordSuccess("http", "foo", elapsed.Nanoseconds()/int64(time.Millisecond), int64(10))
 }
 
-var globalBoomer *boomer.Boomer
+var globalBoomer *swarm.Boomer
 
 func main() {
 	log.SetFlags(log.LstdFlags | log.Lshortfile)
 
-	task1 := &boomer.Task{
+	task1 := &swarm.Task{
 		Name:   "foo",
 		Weight: 10,
 		Fn:     foo,
@@ -30,6 +30,6 @@ func main() {
 
 	numClients := 10
 	spawnRate := 10
-	globalBoomer = boomer.NewStandaloneBoomer(numClients, spawnRate)
+	globalBoomer = swarm.NewStandaloneBoomer(numClients, float64(spawnRate))
 	globalBoomer.Run(task1)
 }

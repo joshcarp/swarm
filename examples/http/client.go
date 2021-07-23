@@ -11,7 +11,7 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/myzhan/boomer"
+	"github.com/joshcarp/swarm"
 )
 
 // This is a tool like Apache Benchmark a.k.a "ab".
@@ -47,9 +47,9 @@ func worker() {
 		if verbose {
 			log.Printf("%v\n", err)
 		}
-		boomer.RecordFailure("http", "error", 0.0, err.Error())
+		swarm.RecordFailure("http", "error", 0.0, err.Error())
 	} else {
-		boomer.RecordSuccess("http", strconv.Itoa(response.StatusCode),
+		swarm.RecordSuccess("http", strconv.Itoa(response.StatusCode),
 			elapsed.Nanoseconds()/int64(time.Millisecond), response.ContentLength)
 
 		if verbose {
@@ -126,11 +126,11 @@ verbose: %t`, method, url, timeout, postFile, contentType, disableCompression, d
 		Timeout:   time.Duration(timeout) * time.Second,
 	}
 
-	task := &boomer.Task{
+	task := &swarm.Task{
 		Name:   "worker",
 		Weight: 10,
 		Fn:     worker,
 	}
 
-	boomer.Run(task)
+	swarm.Run(task)
 }
