@@ -176,8 +176,8 @@ func main() {
 	initHTTPClient()
 
 	task := &swarm.Task{
-		Name: "lua",
-		Fn:   luaHTTP,
+		Namef: "lua",
+		Fn:    luaHTTP,
 	}
 
 	globalBoomer.Run(task)

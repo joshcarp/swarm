@@ -42,8 +42,8 @@ func main() {
 	ts := swarm.NewWeighingTaskSet()
 
 	taskA := &swarm.Task{
-		Name:   "TaskA",
-		Weight: 10,
+		Namef:   "TaskA",
+		Weightf: 10,
 		Fn: func() {
 			time.Sleep(100 * time.Millisecond)
 			globalBoomer.RecordSuccess("task", "A", 100, int64(10))
@@ -51,8 +51,8 @@ func main() {
 	}
 
 	taskB := &swarm.Task{
-		Name:   "TaskB",
-		Weight: 20,
+		Namef:   "TaskB",
+		Weightf: 20,
 		Fn: func() {
 			time.Sleep(100 * time.Millisecond)
 			globalBoomer.RecordSuccess("task", "B", 100, int64(20))
@@ -64,8 +64,8 @@ func main() {
 	ts.AddTask(taskB)
 
 	task := &swarm.Task{
-		Name: "TaskSet",
-		Fn:   ts.Run,
+		Namef: "TaskSet",
+		Fn:    ts.Run,
 	}
 
 	globalBoomer.Run(task)

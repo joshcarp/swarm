@@ -31,15 +31,15 @@ func main() {
 	log.SetFlags(log.LstdFlags | log.Lshortfile)
 
 	task1 := &swarm.Task{
-		Name:   "foo",
-		Weight: 10,
-		Fn:     foo,
+		Namef:   "foo",
+		Weightf: 10,
+		Fn:      foo,
 	}
 
 	task2 := &swarm.Task{
-		Name:   "bar",
-		Weight: 30,
-		Fn:     bar,
+		Namef:   "bar",
+		Weightf: 30,
+		Fn:      bar,
 	}
 
 	swarm.Run(task1, task2)

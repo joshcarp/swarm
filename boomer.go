@@ -103,7 +103,7 @@ func (b *Boomer) EnableMemoryProfile(memoryProfile string, duration time.Duratio
 }
 
 // Run accepts a slice of Task and connects to the locust master.
-func (b *Boomer) Run(tasks ...*Task) {
+func (b *Boomer) Run(tasks ...Tasker) {
 	if b.cpuProfile != "" {
 		err := StartCPUProfile(b.cpuProfile, b.cpuProfileDuration)
 		if err != nil {
@@ -203,16 +203,16 @@ func (b *Boomer) Quit() {
 }
 
 // Run tasks without connecting to the master.
-func runTasksForTest(tasks ...*Task) {
+func runTasksForTest(tasks ...Tasker) {
 	taskNames := strings.Split(runTasks, ",")
 	for _, task := range tasks {
-		if task.Name == "" {
+		if task.Name() == "" {
 			continue
 		} else {
 			for _, name := range taskNames {
-				if name == task.Name {
-					log.Println("Running " + task.Name)
-					task.Fn()
+				if name == task.Name() {
+					log.Println("Running " + task.Name())
+					task.Run()
 				}
 			}
 		}
@@ -221,7 +221,7 @@ func runTasksForTest(tasks ...*Task) {
 
 // Run accepts a slice of Task and connects to a locust master.
 // It's a convenience function to use the defaultBoomer.
-func Run(tasks ...*Task) {
+func Run(tasks ...Tasker) {
 	if !flag.Parsed() {
 		flag.Parse()
 	}

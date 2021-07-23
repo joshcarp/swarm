@@ -43,12 +43,12 @@ func NewWeighingTaskSet() *WeighingTaskSet {
 // AddTask add a Task to the Weighing TaskSet.
 // If the task's weight is <=0, it will be ignored.
 func (ts *WeighingTaskSet) AddTask(task *Task) {
-	if task.Weight <= 0 {
+	if task.Weightf <= 0 {
 		return
 	}
 	ts.lock.Lock()
 	ts.tasks = append(ts.tasks, task)
-	ts.offset = ts.offset + task.Weight
+	ts.offset = ts.offset + task.Weightf
 	ts.index = append(ts.index, ts.offset)
 	ts.lock.Unlock()
 }

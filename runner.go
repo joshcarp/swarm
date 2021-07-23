@@ -28,7 +28,7 @@ const (
 type runner struct {
 	state string
 
-	tasks           []*Task
+	tasks           []Tasker
 	totalTaskWeight int
 
 	rateLimiter      RateLimiter
@@ -140,11 +140,11 @@ func (r *runner) spawnWorkers(spawnCount int, quit chan bool, spawnCompleteFunc 
 							blocked := r.rateLimiter.Acquire()
 							if !blocked {
 								task := r.getTask()
-								r.safeRun(task.Fn)
+								r.safeRun(task.Run)
 							}
 						} else {
 							task := r.getTask()
-							r.safeRun(task.Fn)
+							r.safeRun(task.Run)
 						}
 					}
 				}
@@ -159,17 +159,17 @@ func (r *runner) spawnWorkers(spawnCount int, quit chan bool, spawnCompleteFunc 
 
 // setTasks will set the runner's task list AND the total task weight
 // which is used to get a random task later
-func (r *runner) setTasks(t []*Task) {
+func (r *runner) setTasks(t []Tasker) {
 	r.tasks = t
 
 	weightSum := 0
 	for _, task := range r.tasks {
-		weightSum += task.Weight
+		weightSum += task.Weight()
 	}
 	r.totalTaskWeight = weightSum
 }
 
-func (r *runner) getTask() *Task {
+func (r *runner) getTask() Tasker {
 	tasksCount := len(r.tasks)
 	if tasksCount == 1 {
 		// Fast path
@@ -188,7 +188,7 @@ func (r *runner) getTask() *Task {
 	randNum := rs.Intn(totalWeight)
 	runningSum := 0
 	for _, task := range r.tasks {
-		runningSum += task.Weight
+		runningSum += task.Weight()
 		if runningSum > randNum {
 			return task
 		}
@@ -229,7 +229,7 @@ type localRunner struct {
 	spawnCount int
 }
 
-func newLocalRunner(tasks []*Task, rateLimiter RateLimiter, spawnCount int, spawnRate float64) (r *localRunner) {
+func newLocalRunner(tasks []Tasker, rateLimiter RateLimiter, spawnCount int, spawnRate float64) (r *localRunner) {
 	r = &localRunner{}
 	r.setTasks(tasks)
 	r.spawnRate = spawnRate
@@ -292,7 +292,7 @@ type slaveRunner struct {
 	client     client
 }
 
-func newSlaveRunner(masterHost string, masterPort int, tasks []*Task, rateLimiter RateLimiter) (r *slaveRunner) {
+func newSlaveRunner(masterHost string, masterPort int, tasks []Tasker, rateLimiter RateLimiter) (r *slaveRunner) {
 	r = &slaveRunner{}
 	r.masterHost = masterHost
 	r.masterPort = masterPort

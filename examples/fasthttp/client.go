@@ -112,9 +112,9 @@ verbose: %t`, method, url, timeout, postFile, contentType, disableKeepalive, ver
 	}
 
 	task := &swarm.Task{
-		Name:   "worker",
-		Weight: 10,
-		Fn:     worker,
+		Namef:   "worker",
+		Weightf: 10,
+		Fn:      worker,
 	}
 
 	swarm.Run(task)

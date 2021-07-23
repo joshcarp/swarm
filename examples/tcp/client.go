@@ -70,9 +70,9 @@ func main() {
 	flag.Parse()
 
 	task := &swarm.Task{
-		Name:   "tcp",
-		Weight: 10,
-		Fn:     worker,
+		Namef:   "tcp",
+		Weightf: 10,
+		Fn:      worker,
 	}
 
 	swarm.Events.Subscribe("boomer:spawn", func(workers int, spawnRate float64) {

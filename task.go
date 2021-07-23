@@ -6,8 +6,26 @@ package swarm
 // Because Task.Fn is a pure function.
 type Task struct {
 	// The weight is used to distribute goroutines over multiple tasks.
-	Weight int
+	Weightf int
 	// Fn is called by the goroutines allocated to this task, in a loop.
-	Fn   func()
-	Name string
+	Fn    func()
+	Namef string
+}
+
+func (t Task) Run() {
+	t.Fn()
+}
+
+func (t Task) Name() string {
+	return t.Namef
+}
+
+func (t Task) Weight() int {
+	return t.Weightf
+}
+
+type Tasker interface {
+	Weight() int
+	Name() string
+	Run()
 }

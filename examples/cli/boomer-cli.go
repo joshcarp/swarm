@@ -15,32 +15,32 @@ import (
 
 var plugins string
 
-func createTask(pluginPath string) (task *swarm.Task, err error) {
+func createTask(pluginPath string) (task swarm.Task, err error) {
 	if _, err := os.Stat(pluginPath); os.IsNotExist(err) {
-		return nil, err
+		return swarm.Task{}, err
 	}
 	loadedPlugin, err := plugin.Open(pluginPath)
 	if err != nil {
-		return nil, err
+		return swarm.Task{}, err
 	}
-	task = &swarm.Task{}
+	task = swarm.Task{}
 	getName, err := loadedPlugin.Lookup("GetName")
 	if err != nil {
 		log.Println(err)
 	} else {
-		task.Name = getName.(func() string)()
+		task.Namef = getName.(func() string)()
 	}
 
 	getWeight, err := loadedPlugin.Lookup("GetWeight")
 	if err != nil {
 		log.Println(err)
 	} else {
-		task.Weight = getWeight.(func() int)()
+		task.Weightf = getWeight.(func() int)()
 	}
 
 	execute, err := loadedPlugin.Lookup("Execute")
 	if err != nil {
-		return nil, err
+		return swarm.Task{}, err
 	}
 
 	task.Fn = execute.(func())
@@ -52,14 +52,14 @@ func main() {
 		flag.Parse()
 	}
 	plugins := strings.Split(plugins, ",")
-	tasks := make([]*swarm.Task, 0)
+	tasks := make([]swarm.Tasker, 0)
 	for _, plugin := range plugins {
 		task, err := createTask(plugin)
 		if err != nil {
 			log.Printf("Ignored plugin %s, Error: %v", plugin, err)
 			continue
 		}
-		log.Println("Loaded task", task.Name, "with weight", task.Weight)
+		log.Println("Loaded task", task.Namef, "with weight", task.Weightf)
 		tasks = append(tasks, task)
 	}
 

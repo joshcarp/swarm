@@ -33,9 +33,9 @@ func main() {
 	})
 
 	task := &swarm.Task{
-		Name:   "foo",
-		Weight: 10,
-		Fn:     foo,
+		Namef:   "foo",
+		Weightf: 10,
+		Fn:      foo,
 	}
 
 	swarm.Run(task)

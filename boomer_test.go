@@ -117,7 +117,7 @@ func TestStandaloneRun(t *testing.T) {
 
 	count := int64(0)
 	taskA := &Task{
-		Name: "increaseCount",
+		Namef: "increaseCount",
 		Fn: func() {
 			atomic.AddInt64(&count, 1)
 			runtime.Goexit()
@@ -163,7 +163,7 @@ func TestDistributedRun(t *testing.T) {
 
 	count := int64(0)
 	taskA := &Task{
-		Name: "increaseCount",
+		Namef: "increaseCount",
 		Fn: func() {
 			atomic.AddInt64(&count, 1)
 			runtime.Goexit()
@@ -188,13 +188,13 @@ func TestDistributedRun(t *testing.T) {
 func TestRunTasksForTest(t *testing.T) {
 	count := 0
 	taskA := &Task{
-		Name: "increaseCount",
+		Namef: "increaseCount",
 		Fn: func() {
 			count++
 		},
 	}
 	taskWithoutName := &Task{
-		Name: "",
+		Namef: "",
 		Fn: func() {
 			count++
 		},
@@ -212,7 +212,7 @@ func TestRunTasksForTest(t *testing.T) {
 
 func TestRunTasksWithBoomerReport(t *testing.T) {
 	taskA := &Task{
-		Name: "report",
+		Namef: "report",
 		Fn: func() {
 			// it should not panic.
 			RecordSuccess("http", "foo", int64(1), int64(10))
@@ -284,7 +284,7 @@ func TestRun(t *testing.T) {
 
 	count := int64(0)
 	taskA := &Task{
-		Name: "increaseCount",
+		Namef: "increaseCount",
 		Fn: func() {
 			atomic.AddInt64(&count, 1)
 			runtime.Goexit()

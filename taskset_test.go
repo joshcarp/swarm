@@ -7,16 +7,16 @@ func TestWeighingTaskSetWithSingleTask(t *testing.T) {
 
 	taskAIsRun := false
 	taskA := &Task{
-		Name:   "A",
-		Weight: 1,
+		Namef:   "A",
+		Weightf: 1,
 		Fn: func() {
 			taskAIsRun = true
 		},
 	}
 	ts.AddTask(taskA)
 
-	if ts.GetTask(0).Name != "A" {
-		t.Error("Expecting A, but got ", ts.GetTask(0).Name)
+	if ts.GetTask(0).Namef != "A" {
+		t.Error("Expecting A, but got ", ts.GetTask(0).Namef)
 	}
 	if ts.GetTask(1) != nil {
 		t.Error("Out of bound, should return nil")
@@ -35,58 +35,58 @@ func TestWeighingTaskSetWithSingleTask(t *testing.T) {
 func TestWeighingTaskSetWithTwoTasks(t *testing.T) {
 	ts := NewWeighingTaskSet()
 	taskA := &Task{
-		Name:   "A",
-		Weight: 1,
+		Namef:   "A",
+		Weightf: 1,
 	}
 	taskB := &Task{
-		Name:   "B",
-		Weight: 2,
+		Namef:   "B",
+		Weightf: 2,
 	}
 	ts.AddTask(taskA)
 	ts.AddTask(taskB)
 
-	if ts.GetTask(0).Name != "A" {
-		t.Error("Expecting A, but got ", ts.GetTask(0).Name)
+	if ts.GetTask(0).Namef != "A" {
+		t.Error("Expecting A, but got ", ts.GetTask(0).Namef)
 	}
-	if ts.GetTask(1).Name != "B" {
-		t.Error("Expecting B, but got ", ts.GetTask(1).Name)
+	if ts.GetTask(1).Namef != "B" {
+		t.Error("Expecting B, but got ", ts.GetTask(1).Namef)
 	}
 }
 
 func TestWeighingTaskSetGetTaskWithThreeTasks(t *testing.T) {
 	ts := NewWeighingTaskSet()
 	taskA := &Task{
-		Name:   "A",
-		Weight: 1,
+		Namef:   "A",
+		Weightf: 1,
 	}
 	taskB := &Task{
-		Name:   "B",
-		Weight: 2,
+		Namef:   "B",
+		Weightf: 2,
 	}
 	taskC := &Task{
-		Name:   "C",
-		Weight: 3,
+		Namef:   "C",
+		Weightf: 3,
 	}
 	ts.AddTask(taskA)
 	ts.AddTask(taskB)
 	ts.AddTask(taskC)
 
-	if ts.GetTask(0).Name != "A" {
-		t.Error("Expecting A, but got ", ts.GetTask(0).Name)
+	if ts.GetTask(0).Namef != "A" {
+		t.Error("Expecting A, but got ", ts.GetTask(0).Namef)
 	}
-	if ts.GetTask(1).Name != "B" {
-		t.Error("Expecting B, but got ", ts.GetTask(1).Name)
+	if ts.GetTask(1).Namef != "B" {
+		t.Error("Expecting B, but got ", ts.GetTask(1).Namef)
 	}
-	if ts.GetTask(2).Name != "B" {
-		t.Error("Expecting B, but got ", ts.GetTask(2).Name)
+	if ts.GetTask(2).Namef != "B" {
+		t.Error("Expecting B, but got ", ts.GetTask(2).Namef)
 	}
-	if ts.GetTask(3).Name != "C" {
-		t.Error("Expecting C, but got ", ts.GetTask(3).Name)
+	if ts.GetTask(3).Namef != "C" {
+		t.Error("Expecting C, but got ", ts.GetTask(3).Namef)
 	}
-	if ts.GetTask(4).Name != "C" {
-		t.Error("Expecting C, but got ", ts.GetTask(4).Name)
+	if ts.GetTask(4).Namef != "C" {
+		t.Error("Expecting C, but got ", ts.GetTask(4).Namef)
 	}
-	if ts.GetTask(5).Name != "C" {
-		t.Error("Expecting C, but got ", ts.GetTask(5).Name)
+	if ts.GetTask(5).Namef != "C" {
+		t.Error("Expecting C, but got ", ts.GetTask(5).Namef)
 	}
 }

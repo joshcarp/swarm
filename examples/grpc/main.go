@@ -76,9 +76,9 @@ func main() {
 	client = grequester.NewRequester(addr, service, method, timeout, poolsize)
 
 	task := &swarm.Task{
-		Name:   "rpcReq",
-		Weight: 10,
-		Fn:     rpcReq,
+		Namef:   "rpcReq",
+		Weightf: 10,
+		Fn:      rpcReq,
 	}
 
 	swarm.Run(task)

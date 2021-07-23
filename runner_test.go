@@ -81,13 +81,13 @@ func TestOutputOnStop(t *testing.T) {
 
 func TestLocalRunner(t *testing.T) {
 	taskA := &Task{
-		Weight: 10,
+		Weightf: 10,
 		Fn: func() {
 			time.Sleep(time.Second)
 		},
-		Name: "TaskA",
+		Namef: "TaskA",
 	}
-	tasks := []*Task{taskA}
+	tasks := []Tasker{taskA}
 	runner := newLocalRunner(tasks, nil, 2, 2)
 	go runner.run()
 	time.Sleep(4 * time.Second)
@@ -96,13 +96,13 @@ func TestLocalRunner(t *testing.T) {
 
 func TestSpawnWorkers(t *testing.T) {
 	taskA := &Task{
-		Weight: 10,
+		Weightf: 10,
 		Fn: func() {
 			time.Sleep(time.Second)
 		},
-		Name: "TaskA",
+		Namef: "TaskA",
 	}
-	tasks := []*Task{taskA}
+	tasks := []Tasker{taskA}
 
 	runner := newSlaveRunner("localhost", 5557, tasks, nil)
 	defer runner.close()
@@ -125,8 +125,8 @@ func TestSpawnWorkersWithManyTasks(t *testing.T) {
 
 	createTask := func(name string, weight int) *Task {
 		return &Task{
-			Name:   name,
-			Weight: weight,
+			Namef:   name,
+			Weightf: weight,
 			Fn: func() {
 				lock.Lock()
 				defer lock.Unlock()
@@ -134,7 +134,7 @@ func TestSpawnWorkersWithManyTasks(t *testing.T) {
 			},
 		}
 	}
-	tasks := []*Task{
+	tasks := []Tasker{
 		createTask(`one hundred`, 100),
 		createTask(`ten`, 10),
 		createTask(`one`, 1),
@@ -193,8 +193,8 @@ func TestSpawnWorkersWithManyTasksInWeighingTaskSet(t *testing.T) {
 
 	createTask := func(name string, weight int) *Task {
 		return &Task{
-			Name:   name,
-			Weight: weight,
+			Namef:   name,
+			Weightf: weight,
 			Fn: func() {
 				lock.Lock()
 				defer lock.Unlock()
@@ -211,11 +211,11 @@ func TestSpawnWorkersWithManyTasksInWeighingTaskSet(t *testing.T) {
 	wts.AddTask(createTask(`one`, 1))
 
 	task := &Task{
-		Name: "TaskSetWrapperTask",
-		Fn:   wts.Run,
+		Namef: "TaskSetWrapperTask",
+		Fn:    wts.Run,
 	}
 
-	runner := newSlaveRunner("localhost", 5557, []*Task{task}, nil)
+	runner := newSlaveRunner("localhost", 5557, []Tasker{task}, nil)
 	defer runner.close()
 
 	runner.client = newClient("localhost", 5557, runner.nodeID)
@@ -281,7 +281,7 @@ func TestSpawnAndStop(t *testing.T) {
 			time.Sleep(2 * time.Second)
 		},
 	}
-	tasks := []*Task{taskA, taskB}
+	tasks := []Tasker{taskA, taskB}
 	runner := newSlaveRunner("localhost", 5557, tasks, nil)
 	runner.state = stateSpawning
 	defer runner.close()
@@ -327,7 +327,7 @@ func TestStop(t *testing.T) {
 			time.Sleep(time.Second)
 		},
 	}
-	tasks := []*Task{taskA}
+	tasks := []Tasker{taskA}
 	runner := newSlaveRunner("localhost", 5557, tasks, nil)
 	runner.stopChan = make(chan bool)
 
@@ -345,37 +345,13 @@ func TestStop(t *testing.T) {
 	}
 }
 
-func TestConnectFail(t *testing.T) {
-	taskA := &Task{
-		Fn: func() {
-			time.Sleep(time.Second)
-		},
-	}
-	tasks := []*Task{taskA}
-	runner := newSlaveRunner("localhost", 5557, tasks, nil)
-	runner.stopChan = make(chan bool)
-
-	failed := false
-	handler := func() {
-		failed = true
-	}
-	Events.Subscribe("connect:fail", handler)
-	defer Events.Unsubscribe("connect:fail", handler)
-
-	runner.stop()
-
-	if failed != true {
-		t.Error("Expected stopped to be true, was", failed)
-	}
-}
-
 func TestOnSpawnMessage(t *testing.T) {
 	taskA := &Task{
 		Fn: func() {
 			time.Sleep(time.Second)
 		},
 	}
-	runner := newSlaveRunner("localhost", 5557, []*Task{taskA}, nil)
+	runner := newSlaveRunner("localhost", 5557, []Tasker{taskA}, nil)
 	defer runner.close()
 	runner.client = newClient("localhost", 5557, runner.nodeID)
 	runner.state = stateInit
@@ -475,7 +451,7 @@ func TestOnMessage(t *testing.T) {
 			time.Sleep(2 * time.Second)
 		},
 	}
-	tasks := []*Task{taskA, taskB}
+	tasks := []Tasker{taskA, taskB}
 
 	runner := newSlaveRunner("localhost", 5557, tasks, nil)
 	defer runner.close()
@@ -640,8 +616,7 @@ func TestEarlyStop(t *testing.T) {
 			time.Sleep(time.Second)
 		},
 	}
-	tasks := []*Task{task}
-
+	tasks := []Tasker{task}
 	runner := newSlaveRunner("localhost", 5557, tasks, nil)
 	defer runner.close()
 	runner.client = newClient("localhost", 5557, runner.nodeID)

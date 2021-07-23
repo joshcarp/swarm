@@ -42,9 +42,9 @@ func main() {
 	log.SetFlags(log.LstdFlags | log.Lshortfile)
 
 	task1 := &swarm.Task{
-		Name:   "foo",
-		Weight: 10,
-		Fn:     foo,
+		Namef:   "foo",
+		Weightf: 10,
+		Fn:      foo,
 	}
 
 	ratelimiter, _ := swarm.NewRampUpRateLimiter(1000, "100/1s", time.Second)

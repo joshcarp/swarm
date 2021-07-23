@@ -36,8 +36,8 @@ func main() {
 	globalClient = client
 
 	task := &swarm.Task{
-		Name: "etcd/clientv3",
-		Fn:   worker,
+		Namef: "etcd/clientv3",
+		Fn:    worker,
 	}
 
 	swarm.Run(task)

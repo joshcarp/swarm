@@ -160,9 +160,9 @@ func main() {
 	swarm.Events.Subscribe("boomer:stop", stopTest)
 
 	task := &swarm.Task{
-		Name:   "udproxy",
-		Weight: 10,
-		Fn:     deadend,
+		Namef:   "udproxy",
+		Weightf: 10,
+		Fn:      deadend,
 	}
 
 	go proxy()
