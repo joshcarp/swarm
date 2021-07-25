@@ -24,7 +24,7 @@ type gomqSocketClient struct {
 }
 
 func newClient(masterHost string, masterPort int, identity string) (client *gomqSocketClient) {
-	log.Println("Boomer is built with gomq support.")
+	log.Println("Swarmer is built with gomq support.")
 	client = &gomqSocketClient{
 		masterHost:             masterHost,
 		masterPort:             masterPort,
@@ -45,7 +45,7 @@ func (c *gomqSocketClient) connect() (err error) {
 		return err
 	}
 
-	log.Printf("Boomer is connected to master(%s) press Ctrl+c to quit.\n", addr)
+	log.Printf("Swarmer is connected to master(%s) press Ctrl+c to quit.\n", addr)
 	go c.recv()
 	go c.send()
 

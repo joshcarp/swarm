@@ -268,7 +268,7 @@ func (s *statsEntry) serialize() map[string]interface{} {
 	result["last_request_timestamp"] = s.lastRequestTimestamp
 	result["start_time"] = s.startTime
 	result["num_requests"] = s.numRequests
-	// Boomer doesn't allow None response time for requests like locust.
+	// Swarmer doesn't allow None response time for requests like locust.
 	// num_none_requests is added to keep compatible with locust.
 	result["num_none_requests"] = 0
 	result["num_failures"] = s.numFailures

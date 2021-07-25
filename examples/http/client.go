@@ -31,7 +31,7 @@ var contentType string
 var disableCompression bool
 var disableKeepalive bool
 
-func worker(bm *swarm.Boomer) func() {
+func worker(bm *swarm.Swarmer) func() {
 	return func() {
 		request, err := http.NewRequest(method, url, bytes.NewBuffer(postBody))
 		if err != nil {
@@ -113,7 +113,7 @@ verbose: %t`, method, url, timeout, postFile, contentType, disableCompression, d
 		}
 		postBody = tmp
 	}
-	bm := swarm.NewBoomer("localhost", 5557)
+	bm := swarm.NewSwarmer("localhost", 5557)
 	http.DefaultTransport.(*http.Transport).MaxIdleConnsPerHost = 2000
 	tr := &http.Transport{
 		TLSClientConfig: &tls.Config{

@@ -23,7 +23,7 @@ type czmqSocketClient struct {
 }
 
 func newClient(masterHost string, masterPort int, identity string) (client *czmqSocketClient) {
-	log.Println("Boomer is built with goczmq support.")
+	log.Println("Swarmer is built with goczmq support.")
 	client = &czmqSocketClient{
 		masterHost:             masterHost,
 		masterPort:             masterPort,
@@ -48,7 +48,7 @@ func (c *czmqSocketClient) connect() (err error) {
 
 	c.dealerSocket = dealer
 
-	log.Printf("Boomer is connected to master(%s) press Ctrl+c to quit.\n", addr)
+	log.Printf("Swarmer is connected to master(%s) press Ctrl+c to quit.\n", addr)
 
 	go c.recv()
 	go c.send()

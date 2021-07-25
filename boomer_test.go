@@ -13,8 +13,8 @@ import (
 	"time"
 )
 
-func TestNewBoomer(t *testing.T) {
-	b := NewBoomer("0.0.0.0", 1234)
+func TestNewSwarmer(t *testing.T) {
+	b := NewSwarmer("0.0.0.0", 1234)
 
 	if b.masterHost != "0.0.0.0" {
 		t.Error("masterHost should be 0.0.0.0")
@@ -29,8 +29,8 @@ func TestNewBoomer(t *testing.T) {
 	}
 }
 
-func TestNewStandaloneBoomer(t *testing.T) {
-	b := NewStandaloneBoomer(100, 10)
+func TestNewStandaloneSwarmer(t *testing.T) {
+	b := NewStandaloneSwarmer(100, 10)
 
 	if b.spawnCount != 100 {
 		t.Error("spawnCount should be 100")
@@ -46,7 +46,7 @@ func TestNewStandaloneBoomer(t *testing.T) {
 }
 
 func TestSetRateLimiter(t *testing.T) {
-	b := NewStandaloneBoomer(100, 10)
+	b := NewStandaloneSwarmer(100, 10)
 	limiter, _ := NewRampUpRateLimiter(10, "10/1s", time.Second)
 	b.SetRateLimiter(limiter)
 
@@ -56,7 +56,7 @@ func TestSetRateLimiter(t *testing.T) {
 }
 
 func TestSetMode(t *testing.T) {
-	b := NewStandaloneBoomer(100, 10)
+	b := NewStandaloneSwarmer(100, 10)
 
 	b.SetMode(DistributedMode)
 	if b.mode != DistributedMode {
@@ -75,7 +75,7 @@ func TestSetMode(t *testing.T) {
 }
 
 func TestAddOutput(t *testing.T) {
-	b := NewStandaloneBoomer(100, 10)
+	b := NewStandaloneSwarmer(100, 10)
 	b.AddOutput(NewConsoleOutput())
 	b.AddOutput(NewConsoleOutput())
 
@@ -85,7 +85,7 @@ func TestAddOutput(t *testing.T) {
 }
 
 func TestEnableCPUProfile(t *testing.T) {
-	b := NewStandaloneBoomer(100, 10)
+	b := NewStandaloneSwarmer(100, 10)
 	b.EnableCPUProfile("cpu.prof", time.Second)
 
 	if b.cpuProfile != "cpu.prof" {
@@ -98,7 +98,7 @@ func TestEnableCPUProfile(t *testing.T) {
 }
 
 func TestEnableMemoryProfile(t *testing.T) {
-	b := NewStandaloneBoomer(100, 10)
+	b := NewStandaloneSwarmer(100, 10)
 	b.EnableMemoryProfile("mem.prof", time.Second)
 
 	if b.memoryProfile != "mem.prof" {
@@ -111,7 +111,7 @@ func TestEnableMemoryProfile(t *testing.T) {
 }
 
 func TestStandaloneRun(t *testing.T) {
-	b := NewStandaloneBoomer(10, 10)
+	b := NewStandaloneSwarmer(10, 10)
 	b.EnableCPUProfile("cpu.pprof", 2*time.Second)
 	b.EnableMemoryProfile("mem.pprof", 2*time.Second)
 
@@ -158,7 +158,7 @@ func TestStandaloneRun(t *testing.T) {
 //	server.start()
 //
 //	time.Sleep(20 * time.Millisecond)
-//	b := NewBoomer(masterHost, masterPort)
+//	b := NewSwarmer(masterHost, masterPort)
 //	var wg sync2.WaitGroup
 //	wg.Add(10)
 //	var count int64 = 0
@@ -209,7 +209,7 @@ func TestRunTasksForTest(t *testing.T) {
 	}
 }
 
-//func TestRunTasksWithBoomerReport(t *testing.T) {
+//func TestRunTasksWithSwarmerReport(t *testing.T) {
 //	taskA := &Task{
 //		Namef: "report",
 //		Fn: func() {
@@ -289,7 +289,7 @@ func TestRun(t *testing.T) {
 			runtime.Goexit()
 		},
 	}
-	bm := NewBoomer(masterHost, masterPort)
+	bm := NewSwarmer(masterHost, masterPort)
 	go bm.Run(taskA)
 	time.Sleep(20 * time.Millisecond)
 
@@ -310,7 +310,7 @@ func TestRun(t *testing.T) {
 func TestRecordSuccess(t *testing.T) {
 	masterHost := "127.0.0.1"
 	masterPort := 5557
-	bm := NewBoomer(masterHost, masterPort)
+	bm := NewSwarmer(masterHost, masterPort)
 	bm.slaveRunner = newSlaveRunner(bm.Events, masterHost, masterPort, nil, nil)
 	bm.RecordSuccess("http", "foo", int64(1), int64(10))
 
@@ -326,7 +326,7 @@ func TestRecordSuccess(t *testing.T) {
 func TestRecordFailure(t *testing.T) {
 	masterHost := "127.0.0.1"
 	masterPort := 5557
-	bm := NewBoomer(masterHost, masterPort)
+	bm := NewSwarmer(masterHost, masterPort)
 	bm.slaveRunner = newSlaveRunner(bm.Events, masterHost, masterPort, nil, nil)
 	bm.RecordFailure("udp", "bar", int64(2), "udp error")
 

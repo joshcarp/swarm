@@ -11,7 +11,7 @@ import (
 	"github.com/joshcarp/swarm"
 )
 
-func waitForQuit(bm *swarm.Boomer) {
+func waitForQuit(bm *swarm.Swarmer) {
 	wg := sync.WaitGroup{}
 	wg.Add(1)
 
@@ -25,7 +25,7 @@ func waitForQuit(bm *swarm.Boomer) {
 		wg.Done()
 	}()
 
-	bm.Events.Subscribe("boomer:quit", func() {
+	bm.Events.Subscribe("swarmer:quit", func() {
 		if !quitByMe {
 			wg.Done()
 		}
@@ -36,7 +36,7 @@ func waitForQuit(bm *swarm.Boomer) {
 
 func main() {
 	log.SetFlags(log.LstdFlags | log.Lshortfile)
-	bm := swarm.NewBoomer("127.0.0.1", 5557)
+	bm := swarm.NewSwarmer("127.0.0.1", 5557)
 	ts := swarm.NewWeighingTaskSet()
 
 	taskA := &swarm.Task{

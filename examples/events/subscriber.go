@@ -7,9 +7,9 @@ import (
 	"github.com/joshcarp/swarm"
 )
 
-// This is an example about how to subscribe to boomer's internal events.
+// This is an example about how to subscribe to swarmer's internal events.
 
-func foo(bm *swarm.Boomer) func(){
+func foo(bm *swarm.Swarmer) func(){
 	return func(){
 		start := time.Now()
 		time.Sleep(100 * time.Millisecond)
@@ -20,17 +20,17 @@ func foo(bm *swarm.Boomer) func(){
 
 func main() {
 	log.SetFlags(log.LstdFlags | log.Lshortfile)
-	bm := swarm.NewBoomer("localhost", 5557)
-	bm.Events.Subscribe("boomer:spawn", func(workers int, spawnRate float64) {
+	bm := swarm.NewSwarmer("localhost", 5557)
+	bm.Events.Subscribe("swarmer:spawn", func(workers int, spawnRate float64) {
 		log.Println("The master asks me to spawn", workers, "goroutines with a spawn rate of", spawnRate, "per second.")
 	})
 
-	bm.Events.Subscribe("boomer:stop", func() {
+	bm.Events.Subscribe("swarmer:stop", func() {
 		log.Println("The master asks me to stop.")
 	})
 
-	bm.Events.Subscribe("boomer:quit", func() {
-		log.Println("Boomer is quitting now, may be the master asks it to do so, or it receives one of SIGINT and SIGTERM.")
+	bm.Events.Subscribe("swarmer:quit", func() {
+		log.Println("Swarmer is quitting now, may be the master asks it to do so, or it receives one of SIGINT and SIGTERM.")
 	})
 
 	task := &swarm.Task{

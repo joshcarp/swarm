@@ -18,7 +18,7 @@ func foo() {
 
 	// Report your test result as a success, if you write it in python, it will looks like this
 	// events.request_success.fire(request_type="http", name="foo", response_time=100, response_length=10)
-	globalBoomer.RecordSuccess("http", "foo", elapsed.Nanoseconds()/int64(time.Millisecond), int64(10))
+	globalSwarmer.RecordSuccess("http", "foo", elapsed.Nanoseconds()/int64(time.Millisecond), int64(10))
 }
 
 func waitForQuit() {
@@ -29,14 +29,14 @@ func waitForQuit() {
 		c := make(chan os.Signal)
 		signal.Notify(c, syscall.SIGINT, syscall.SIGTERM)
 		<-c
-		globalBoomer.Quit()
+		globalSwarmer.Quit()
 		wg.Done()
 	}()
 
 	wg.Wait()
 }
 
-var globalBoomer = swarm.NewBoomer("127.0.0.1", 5557)
+var globalSwarmer = swarm.NewSwarmer("127.0.0.1", 5557)
 
 func main() {
 	log.SetFlags(log.LstdFlags | log.Lshortfile)
@@ -49,9 +49,9 @@ func main() {
 
 	ratelimiter, _ := swarm.NewRampUpRateLimiter(1000, "100/1s", time.Second)
 	log.Println("the max rps is limited to 1000/s, with a rampup rate 100/1s.")
-	globalBoomer.SetRateLimiter(ratelimiter)
+	globalSwarmer.SetRateLimiter(ratelimiter)
 
-	globalBoomer.Run(task1)
+	globalSwarmer.Run(task1)
 
 	waitForQuit()
 	log.Println("shut down")

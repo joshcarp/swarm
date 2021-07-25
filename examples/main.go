@@ -18,7 +18,7 @@ func foo() {
 
 	// Report your test result as a success, if you write it in python, it will looks like this
 	// events.request_success.fire(request_type="http", name="foo", response_time=100, response_length=10)
-	globalBoomer.RecordSuccess("http", "foo", elapsed.Nanoseconds()/int64(time.Millisecond), int64(10))
+	globalSwarmer.RecordSuccess("http", "foo", elapsed.Nanoseconds()/int64(time.Millisecond), int64(10))
 }
 
 func bar() {
@@ -28,10 +28,10 @@ func bar() {
 
 	// Report your test result as a failure, if you write it in python, it will looks like this
 	// events.request_failure.fire(request_type="udp", name="bar", response_time=100, exception=Exception("udp error"))
-	globalBoomer.RecordFailure("udp", "bar", elapsed.Nanoseconds()/int64(time.Millisecond), "udp error")
+	globalSwarmer.RecordFailure("udp", "bar", elapsed.Nanoseconds()/int64(time.Millisecond), "udp error")
 }
 
-func waitForQuit(bm *swarm.Boomer)func() {
+func waitForQuit(bm *swarm.Swarmer)func() {
 	return func() {
 		wg := sync.WaitGroup{}
 		wg.Add(1)
@@ -42,11 +42,11 @@ func waitForQuit(bm *swarm.Boomer)func() {
 			signal.Notify(c, syscall.SIGINT, syscall.SIGTERM)
 			<-c
 			quitByMe = true
-			globalBoomer.Quit()
+			globalSwarmer.Quit()
 			wg.Done()
 		}()
 
-		bm.Events.Subscribe("boomer:quit", func() {
+		bm.Events.Subscribe("swarmer:quit", func() {
 			if !quitByMe {
 				wg.Done()
 			}
@@ -56,7 +56,7 @@ func waitForQuit(bm *swarm.Boomer)func() {
 	}
 }
 
-var globalBoomer = swarm.NewBoomer("127.0.0.1", 5557)
+var globalSwarmer = swarm.NewSwarmer("127.0.0.1", 5557)
 
 func main() {
 	log.SetFlags(log.LstdFlags | log.Lshortfile)
@@ -73,8 +73,8 @@ func main() {
 		Fn:      bar,
 	}
 
-	globalBoomer.Run(task1, task2)
+	globalSwarmer.Run(task1, task2)
 
-	waitForQuit(globalBoomer)
+	waitForQuit(globalSwarmer)
 	log.Println("shut down")
 }

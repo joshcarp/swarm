@@ -10,7 +10,7 @@ import (
 	"github.com/joshcarp/swarm"
 )
 
-// Trying to implement boomer-cli without any test scenarios
+// Trying to implement swarmer-cli without any test scenarios
 // Users can write test scenarios as go plugins, like plugin/demo.go
 
 var plugins string
@@ -66,7 +66,7 @@ func main() {
 	if len(tasks) == 0 {
 		log.Fatalln("No valid plugin found, exit now.")
 	}
-	bm := swarm.NewBoomer("localhost", 5557)
+	bm := swarm.NewSwarmer("localhost", 5557)
 	bm.Run(tasks...)
 }
 

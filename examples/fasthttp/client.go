@@ -21,7 +21,7 @@ var postFile string
 var contentType string
 var disableKeepalive bool
 
-func worker(bm *swarm.Boomer) func() {
+func worker(bm *swarm.Swarmer) func() {
 	return func() {
 
 		req := fasthttp.AcquireRequest()
@@ -109,7 +109,7 @@ verbose: %t`, method, url, timeout, postFile, contentType, disableKeepalive, ver
 		}
 		postBody = tmp
 	}
-	bm := swarm.NewBoomer("localhost", 5557)
+	bm := swarm.NewSwarmer("localhost", 5557)
 	client = &fasthttp.Client{
 		MaxConnsPerHost: 2000,
 	}

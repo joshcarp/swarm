@@ -51,7 +51,7 @@ type runner struct {
 }
 
 // safeRun runs fn and recovers from unexpected panics.
-// it prevents panics from Task.Fn crashing boomer.
+// it prevents panics from Task.Fn crashing swarmer.
 func (r *runner) safeRun(fn func()) {
 	defer func() {
 		// don't panic
@@ -200,8 +200,8 @@ func (r *runner) getTask() Tasker {
 }
 
 func (r *runner) startSpawning(spawnCount int, spawnRate float64, spawnCompleteFunc func()) {
-	r.Events.Publish("boomer:hatch", spawnCount, spawnRate)
-	r.Events.Publish("boomer:spawn", spawnCount, spawnRate)
+	r.Events.Publish("swarmer:hatch", spawnCount, spawnRate)
+	r.Events.Publish("swarmer:spawn", spawnCount, spawnRate)
 
 	r.stats.clearStatsChan <- true
 	r.stopChan = make(chan bool)
@@ -213,9 +213,9 @@ func (r *runner) startSpawning(spawnCount int, spawnRate float64, spawnCompleteF
 }
 
 func (r *runner) stop() {
-	// publish the boomer stop event
+	// publish the swarmer stop event
 	// user's code can subscribe to this event and do thins like cleaning up
-	r.Events.Publish("boomer:stop")
+	r.Events.Publish("swarmer:stop")
 
 	// stop previous goroutines without blocking
 	// those goroutines will exit when r.safeRun returns
@@ -262,7 +262,7 @@ func (r *localRunner) run() {
 				data["user_count"] = r.numClients
 				r.outputOnEevent(data)
 			case <-r.closeChan:
-				r.Events.Publish("boomer:quit")
+				r.Events.Publish("swarmer:quit")
 				r.stop()
 				wg.Done()
 				return
@@ -368,7 +368,7 @@ func (r *slaveRunner) onMessage(msg *message) {
 			r.state = stateSpawning
 			r.onSpawnMessage(msg)
 		case "quit":
-			r.Events.Publish("boomer:quit")
+			r.Events.Publish("swarmer:quit")
 		}
 	case stateSpawning:
 		fallthrough
@@ -388,7 +388,7 @@ func (r *slaveRunner) onMessage(msg *message) {
 		case "quit":
 			r.stop()
 			log.Println("Recv quit message from master, all the goroutines are stopped")
-			r.Events.Publish("boomer:quit")
+			r.Events.Publish("swarmer:quit")
 			r.state = stateInit
 		}
 	case stateStopped:
@@ -397,7 +397,7 @@ func (r *slaveRunner) onMessage(msg *message) {
 			r.state = stateSpawning
 			r.onSpawnMessage(msg)
 		case "quit":
-			r.Events.Publish("boomer:quit")
+			r.Events.Publish("swarmer:quit")
 			r.state = stateInit
 		}
 	}
@@ -475,5 +475,5 @@ func (r *slaveRunner) run() {
 		}
 	}()
 
-	_ = r.Events.Subscribe("boomer:quit", r.onQuiting)
+	_ = r.Events.Subscribe("swarmer:quit", r.onQuiting)
 }

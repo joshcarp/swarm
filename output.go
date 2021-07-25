@@ -11,7 +11,7 @@ import (
 )
 
 // Output is primarily responsible for printing test results to different destinations
-// such as consoles, files. You can write you own output and add to boomer.
+// such as consoles, files. You can write you own output and add to swarmer.
 // When running in standalone mode, the default output is ConsoleOutput, you can add more.
 // When running in distribute mode, test results will be reported to master with or without
 // an output.

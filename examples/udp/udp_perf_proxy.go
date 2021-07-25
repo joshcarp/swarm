@@ -50,7 +50,7 @@ type worker struct {
 	recvBuff []byte
 }
 
-func newWorker(bm *swarm.Boomer, remoteAddr string) *worker {
+func newWorker(bm *swarm.Swarmer, remoteAddr string) *worker {
 	addr, err := net.ResolveUDPAddr("udp", remoteAddr)
 	if err != nil {
 		log.Fatalln("Failed to create worker", err)
@@ -97,14 +97,14 @@ func newWorker(bm *swarm.Boomer, remoteAddr string) *worker {
 	}
 }
 
-func createWorkers(bm *swarm.Boomer) {
+func createWorkers(bm *swarm.Swarmer) {
 	workersPool = make([]*worker, *workersCount)
 	for n := 0; n < *workersCount; n++ {
 		workersPool[n] = newWorker(bm, *backendAddr)
 	}
 }
 
-func proxy(bm *swarm.Boomer) {
+func proxy(bm *swarm.Swarmer) {
 	// Pooling workers
 	createWorkers(bm)
 
@@ -156,9 +156,9 @@ func deadend() {
 }
 
 func main() {
-	bm := swarm.NewBoomer("localhost", 5557)
+	bm := swarm.NewSwarmer("localhost", 5557)
 	bm.Events.Subscribe("boome:spawn", startTest)
-	bm.Events.Subscribe("boomer:stop", stopTest)
+	bm.Events.Subscribe("swarmer:stop", stopTest)
 
 	task := &swarm.Task{
 		Namef:   "udproxy",

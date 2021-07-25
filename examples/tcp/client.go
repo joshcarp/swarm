@@ -14,7 +14,7 @@ var bindHost string
 var bindPort string
 var stopChannel chan bool
 
-func worker(bm *swarm.Boomer) func() {
+func worker(bm *swarm.Swarmer) func() {
 	return func() {
 
 		conn, err := net.Dial("tcp", fmt.Sprintf("%s:%s", bindHost, bindPort))
@@ -71,7 +71,7 @@ func main() {
 	log.SetFlags(log.LstdFlags | log.Lshortfile)
 
 	flag.Parse()
-	bm := swarm.NewBoomer("localhost", 5557)
+	bm := swarm.NewSwarmer("localhost", 5557)
 
 	task := &swarm.Task{
 		Namef:   "tcp",
@@ -79,15 +79,15 @@ func main() {
 		Fn:      worker(bm),
 	}
 
-	bm.Events.Subscribe("boomer:spawn", func(workers int, spawnRate float64) {
+	bm.Events.Subscribe("swarmer:spawn", func(workers int, spawnRate float64) {
 		stopChannel = make(chan bool)
 	})
 
-	bm.Events.Subscribe("boomer:stop", func() {
+	bm.Events.Subscribe("swarmer:stop", func() {
 		close(stopChannel)
 	})
 
-	bm.Events.Subscribe("boomer:quit", func() {
+	bm.Events.Subscribe("swarmer:quit", func() {
 		close(stopChannel)
 		time.Sleep(time.Second)
 	})

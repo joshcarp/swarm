@@ -11,12 +11,12 @@ import (
 
 var globalClient *clientv3.Client
 
-func worker(bm *swarm.Boomer) func() {
+func worker(bm *swarm.Swarmer) func() {
 	return func() {
 		ctx, cancel := context.WithTimeout(context.Background(), time.Second)
 
 		start := time.Now()
-		resp, err := globalClient.Put(ctx, "hello", "boomer")
+		resp, err := globalClient.Put(ctx, "hello", "swarmer")
 		elapsed := time.Since(start)
 		if err != nil {
 			bm.RecordFailure("etcd", "put", elapsed.Nanoseconds()/int64(time.Millisecond), err.Error())
@@ -36,7 +36,7 @@ func main() {
 	defer client.Close()
 
 	globalClient = client
-	bm := swarm.NewBoomer("localhost", 5557)
+	bm := swarm.NewSwarmer("localhost", 5557)
 	task := &swarm.Task{
 		Namef: "etcd/clientv3",
 		Fn:    worker(bm),

@@ -28,7 +28,7 @@ import (
 var script string
 var compiledScript *lua.FunctionProto
 var httpClient *http.Client
-var globalBoomer = swarm.NewBoomer("127.0.0.1", 5557)
+var globalSwarmer = swarm.NewSwarmer("127.0.0.1", 5557)
 
 func initHTTPClient() {
 	http.DefaultTransport.(*http.Transport).MaxIdleConnsPerHost = 2000
@@ -77,7 +77,7 @@ func recordSuccess(l *lua.LState) int {
 	name := l.ToString(2)
 	responseTime := l.ToInt64(3)
 	responseLength := l.ToInt64(4)
-	globalBoomer.RecordSuccess(requestType, name, responseTime, responseLength)
+	globalSwarmer.RecordSuccess(requestType, name, responseTime, responseLength)
 	return 0
 }
 
@@ -86,7 +86,7 @@ func recordFailure(l *lua.LState) int {
 	name := l.ToString(2)
 	responseTime := l.ToInt64(3)
 	exception := l.ToString(4)
-	globalBoomer.RecordFailure(requestType, name, responseTime, exception)
+	globalSwarmer.RecordFailure(requestType, name, responseTime, exception)
 	return 0
 }
 
@@ -134,11 +134,11 @@ func waitForQuit() {
 		signal.Notify(c, syscall.SIGINT, syscall.SIGTERM)
 		<-c
 		quitByMe = true
-		globalBoomer.Quit()
+		globalSwarmer.Quit()
 		wg.Done()
 	}()
 
-	globalBoomer.Events.Subscribe("boomer:quit", func() {
+	globalSwarmer.Events.Subscribe("swarmer:quit", func() {
 		if !quitByMe {
 			wg.Done()
 		}
@@ -180,7 +180,7 @@ func main() {
 		Fn:    luaHTTP,
 	}
 
-	globalBoomer.Run(task)
+	globalSwarmer.Run(task)
 
 	waitForQuit()
 	log.Println("shut down")

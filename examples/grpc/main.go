@@ -25,7 +25,7 @@ var (
 	req        *HelloRequest
 )
 
-func rpcReq(bm *swarm.Boomer) func() {
+func rpcReq(bm *swarm.Swarmer) func() {
 	return func() {
 
 		startTime := time.Now()
@@ -74,7 +74,7 @@ func main() {
 		log.Printf("json unmarshal error")
 		return
 	}
-	bm := swarm.NewBoomer("localhost", 5557)
+	bm := swarm.NewSwarmer("localhost", 5557)
 	// init requester
 	client = grequester.NewRequester(addr, service, method, timeout, poolsize)
 

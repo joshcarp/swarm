@@ -8,12 +8,7 @@ import (
 	"github.com/asaskevich/EventBus"
 )
 
-// Events is the global event bus instance.
-//var Events = EventBus.New()
-
-//var defaultBoomer = &Boomer{}
-
-// Mode is the running mode of boomer, both standalone and distributed are supported.
+// Mode is the running mode of swarmer, both standalone and distributed are supported.
 type Mode int
 
 const (
@@ -23,9 +18,9 @@ const (
 	StandaloneMode
 )
 
-// A Boomer is used to run tasks.
-// This type is exposed, so users can create and control a Boomer instance programmatically.
-type Boomer struct {
+// A Swarmer is used to run tasks.
+// This type is exposed, so users can create and control a Swarmer instance programmatically.
+type Swarmer struct {
 	masterHost  string
 	masterPort  int
 	mode        Mode
@@ -47,9 +42,9 @@ type Boomer struct {
 	Events EventBus.Bus
 }
 
-// NewBoomer returns a new Boomer.
-func NewBoomer(masterHost string, masterPort int) *Boomer {
-	return &Boomer{
+// NewSwarmer returns a new Swarmer.
+func NewSwarmer(masterHost string, masterPort int) *Swarmer {
+	return &Swarmer{
 		masterHost: masterHost,
 		masterPort: masterPort,
 		mode:       DistributedMode,
@@ -57,9 +52,9 @@ func NewBoomer(masterHost string, masterPort int) *Boomer {
 	}
 }
 
-// NewStandaloneBoomer returns a new Boomer, which can run without master.
-func NewStandaloneBoomer(spawnCount int, spawnRate float64) *Boomer {
-	return &Boomer{
+// NewStandaloneSwarmer returns a new Swarmer, which can run without master.
+func NewStandaloneSwarmer(spawnCount int, spawnRate float64) *Swarmer {
+	return &Swarmer{
 		spawnCount: spawnCount,
 		spawnRate:  spawnRate,
 		mode:       StandaloneMode,
@@ -69,12 +64,12 @@ func NewStandaloneBoomer(spawnCount int, spawnRate float64) *Boomer {
 
 // SetRateLimiter allows user to use their own rate limiter.
 // It must be called before the test is started.
-func (b *Boomer) SetRateLimiter(rateLimiter RateLimiter) {
+func (b *Swarmer) SetRateLimiter(rateLimiter RateLimiter) {
 	b.rateLimiter = rateLimiter
 }
 
 // SetMode only accepts swarm.DistributedMode and swarm.StandaloneMode.
-func (b *Boomer) SetMode(mode Mode) {
+func (b *Swarmer) SetMode(mode Mode) {
 	switch mode {
 	case DistributedMode:
 		b.mode = DistributedMode
@@ -86,24 +81,24 @@ func (b *Boomer) SetMode(mode Mode) {
 }
 
 // AddOutput accepts outputs which implements the swarm.Output interface.
-func (b *Boomer) AddOutput(o Output) {
+func (b *Swarmer) AddOutput(o Output) {
 	b.outputs = append(b.outputs, o)
 }
 
 // EnableCPUProfile will start cpu profiling after run.
-func (b *Boomer) EnableCPUProfile(cpuProfile string, duration time.Duration) {
+func (b *Swarmer) EnableCPUProfile(cpuProfile string, duration time.Duration) {
 	b.cpuProfile = cpuProfile
 	b.cpuProfileDuration = duration
 }
 
 // EnableMemoryProfile will start memory profiling after run.
-func (b *Boomer) EnableMemoryProfile(memoryProfile string, duration time.Duration) {
+func (b *Swarmer) EnableMemoryProfile(memoryProfile string, duration time.Duration) {
 	b.memoryProfile = memoryProfile
 	b.memoryProfileDuration = duration
 }
 
 // Run accepts a slice of Task and connects to the locust master.
-func (b *Boomer) Run(tasks ...Tasker) {
+func (b *Swarmer) Run(tasks ...Tasker) {
 	if b.cpuProfile != "" {
 		err := StartCPUProfile(b.cpuProfile, b.cpuProfileDuration)
 		if err != nil {
@@ -131,12 +126,12 @@ func (b *Boomer) Run(tasks ...Tasker) {
 		}
 		b.localRunner.run()
 	default:
-		log.Println("Invalid mode, expected boomer.DistributedMode or boomer.StandaloneMode")
+		log.Println("Invalid mode, expected swarmer.DistributedMode or swarmer.StandaloneMode")
 	}
 }
 
 // RecordSuccess reports a success.
-func (b *Boomer) RecordSuccess(requestType, name string, responseTime int64, responseLength int64) {
+func (b *Swarmer) RecordSuccess(requestType, name string, responseTime int64, responseLength int64) {
 	if b.localRunner == nil && b.slaveRunner == nil {
 		return
 	}
@@ -159,7 +154,7 @@ func (b *Boomer) RecordSuccess(requestType, name string, responseTime int64, res
 }
 
 // RecordFailure reports a failure.
-func (b *Boomer) RecordFailure(requestType, name string, responseTime int64, exception string) {
+func (b *Swarmer) RecordFailure(requestType, name string, responseTime int64, exception string) {
 	if b.localRunner == nil && b.slaveRunner == nil {
 		return
 	}
@@ -182,8 +177,8 @@ func (b *Boomer) RecordFailure(requestType, name string, responseTime int64, exc
 }
 
 // Quit will send a quit message to the master.
-func (b *Boomer) Quit() {
-	b.Events.Publish("boomer:quit")
+func (b *Swarmer) Quit() {
+	b.Events.Publish("swarmer:quit")
 	var ticker = time.NewTicker(3 * time.Second)
 
 	switch b.mode {
@@ -193,7 +188,7 @@ func (b *Boomer) Quit() {
 		case <-b.slaveRunner.client.disconnectedChannel():
 			break
 		case <-ticker.C:
-			log.Println("Timeout waiting for sending quit message to master, boomer will quit any way.")
+			log.Println("Timeout waiting for sending quit message to master, swarmer will quit any way.")
 			break
 		}
 		b.slaveRunner.close()

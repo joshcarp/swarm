@@ -7,7 +7,7 @@ import (
 	"github.com/joshcarp/swarm"
 )
 
-func foo(bm *swarm.Boomer) func() {
+func foo(bm *swarm.Swarmer) func() {
 	return func() {
 		start := time.Now()
 		time.Sleep(100 * time.Millisecond)
@@ -19,7 +19,7 @@ func foo(bm *swarm.Boomer) func() {
 	}
 }
 
-func bar(bm *swarm.Boomer) func() {
+func bar(bm *swarm.Swarmer) func() {
 	return func() {
 		start := time.Now()
 		time.Sleep(100 * time.Millisecond)
@@ -33,7 +33,7 @@ func bar(bm *swarm.Boomer) func() {
 
 func main() {
 	log.SetFlags(log.LstdFlags | log.Lshortfile)
-	bm := swarm.NewBoomer("localhost", 5557)
+	bm := swarm.NewSwarmer("localhost", 5557)
 
 	task1 := &swarm.Task{
 		Namef:   "foo",

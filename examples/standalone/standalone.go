@@ -14,10 +14,10 @@ func foo() {
 
 	// Report your test result as a success, if you write it in python, it will looks like this
 	// events.request_success.fire(request_type="http", name="foo", response_time=100, response_length=10)
-	globalBoomer.RecordSuccess("http", "foo", elapsed.Nanoseconds()/int64(time.Millisecond), int64(10))
+	globalSwarmer.RecordSuccess("http", "foo", elapsed.Nanoseconds()/int64(time.Millisecond), int64(10))
 }
 
-var globalBoomer *swarm.Boomer
+var globalSwarmer *swarm.Swarmer
 
 func main() {
 	log.SetFlags(log.LstdFlags | log.Lshortfile)
@@ -30,6 +30,6 @@ func main() {
 
 	numClients := 10
 	spawnRate := 10
-	globalBoomer = swarm.NewStandaloneBoomer(numClients, float64(spawnRate))
-	globalBoomer.Run(task1)
+	globalSwarmer = swarm.NewStandaloneSwarmer(numClients, float64(spawnRate))
+	globalSwarmer.Run(task1)
 }
