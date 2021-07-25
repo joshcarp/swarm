@@ -50,7 +50,7 @@ type worker struct {
 	recvBuff []byte
 }
 
-func newWorker(remoteAddr string) *worker {
+func newWorker(bm *swarm.Boomer, remoteAddr string) *worker {
 	addr, err := net.ResolveUDPAddr("udp", remoteAddr)
 	if err != nil {
 		log.Fatalln("Failed to create worker", err)
@@ -69,22 +69,22 @@ func newWorker(remoteAddr string) *worker {
 				startTime := time.Now()
 				wn, err := conn.Write(req)
 				if err != nil {
-					swarm.RecordFailure(name, "udp-write", 0.0, err.Error())
+					bm.RecordFailure(name, "udp-write", 0.0, err.Error())
 					continue
 				}
 
 				if *dontRead {
 					elapsed := time.Since(startTime)
-					swarm.RecordSuccess(name, "udp-write", elapsed.Nanoseconds()/int64(time.Millisecond), int64(wn))
+					bm.RecordSuccess(name, "udp-write", elapsed.Nanoseconds()/int64(time.Millisecond), int64(wn))
 				} else {
 					conn.SetReadDeadline(time.Now().Add(backendTimeout))
 					respLength, err := conn.Read(recvBuff)
 					if err != nil {
-						swarm.RecordFailure(name, "udp-read", 0.0, err.Error())
+						bm.RecordFailure(name, "udp-read", 0.0, err.Error())
 						continue
 					}
 					elapsed := time.Since(startTime)
-					swarm.RecordSuccess(name, "udp-resp", elapsed.Nanoseconds()/int64(time.Millisecond), int64(respLength))
+					bm.RecordSuccess(name, "udp-resp", elapsed.Nanoseconds()/int64(time.Millisecond), int64(respLength))
 				}
 			}
 		}
@@ -97,16 +97,16 @@ func newWorker(remoteAddr string) *worker {
 	}
 }
 
-func createWorkers() {
+func createWorkers(bm *swarm.Boomer) {
 	workersPool = make([]*worker, *workersCount)
 	for n := 0; n < *workersCount; n++ {
-		workersPool[n] = newWorker(*backendAddr)
+		workersPool[n] = newWorker(bm, *backendAddr)
 	}
 }
 
-func proxy() {
+func proxy(bm *swarm.Boomer) {
 	// Pooling workers
-	createWorkers()
+	createWorkers(bm)
 
 	listener, err := net.ListenUDP("udp", &net.UDPAddr{
 		IP:   net.ParseIP(*proxyHost),
@@ -156,8 +156,9 @@ func deadend() {
 }
 
 func main() {
-	swarm.Events.Subscribe("boome:spawn", startTest)
-	swarm.Events.Subscribe("boomer:stop", stopTest)
+	bm := swarm.NewBoomer("localhost", 5557)
+	bm.Events.Subscribe("boome:spawn", startTest)
+	bm.Events.Subscribe("boomer:stop", stopTest)
 
 	task := &swarm.Task{
 		Namef:   "udproxy",
@@ -165,9 +166,9 @@ func main() {
 		Fn:      deadend,
 	}
 
-	go proxy()
+	go proxy(bm)
 
-	swarm.Run(task)
+	bm.Run(task)
 }
 
 func init() {

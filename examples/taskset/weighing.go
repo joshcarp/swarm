@@ -11,7 +11,7 @@ import (
 	"github.com/joshcarp/swarm"
 )
 
-func waitForQuit() {
+func waitForQuit(bm *swarm.Boomer) {
 	wg := sync.WaitGroup{}
 	wg.Add(1)
 
@@ -21,11 +21,11 @@ func waitForQuit() {
 		signal.Notify(c, syscall.SIGINT, syscall.SIGTERM)
 		<-c
 		quitByMe = true
-		globalBoomer.Quit()
+		bm.Quit()
 		wg.Done()
 	}()
 
-	swarm.Events.Subscribe("boomer:quit", func() {
+	bm.Events.Subscribe("boomer:quit", func() {
 		if !quitByMe {
 			wg.Done()
 		}
@@ -34,11 +34,9 @@ func waitForQuit() {
 	wg.Wait()
 }
 
-var globalBoomer = swarm.NewBoomer("127.0.0.1", 5557)
-
 func main() {
 	log.SetFlags(log.LstdFlags | log.Lshortfile)
-
+	bm := swarm.NewBoomer("127.0.0.1", 5557)
 	ts := swarm.NewWeighingTaskSet()
 
 	taskA := &swarm.Task{
@@ -46,7 +44,7 @@ func main() {
 		Weightf: 10,
 		Fn: func() {
 			time.Sleep(100 * time.Millisecond)
-			globalBoomer.RecordSuccess("task", "A", 100, int64(10))
+			bm.RecordSuccess("task", "A", 100, int64(10))
 		},
 	}
 
@@ -55,7 +53,7 @@ func main() {
 		Weightf: 20,
 		Fn: func() {
 			time.Sleep(100 * time.Millisecond)
-			globalBoomer.RecordSuccess("task", "B", 100, int64(20))
+			bm.RecordSuccess("task", "B", 100, int64(20))
 		},
 	}
 
@@ -68,8 +66,8 @@ func main() {
 		Fn:    ts.Run,
 	}
 
-	globalBoomer.Run(task)
+	bm.Run(task)
 
-	waitForQuit()
+	waitForQuit(bm)
 	log.Println("shut down")
 }

@@ -14,52 +14,55 @@ var bindHost string
 var bindPort string
 var stopChannel chan bool
 
-func worker() {
-	conn, err := net.Dial("tcp", fmt.Sprintf("%s:%s", bindHost, bindPort))
-	if err != nil {
-		log.Println(err)
-		return
-	}
-	defer conn.Close()
+func worker(bm *swarm.Boomer) func() {
+	return func() {
 
-	readBuff := make([]byte, 5)
-
-	// Usually, you shouldn't run an infinite loop in worker function, unless you know exactly what you are doing.
-	// It will disable features like rate limit.
-	for {
-		select {
-		case <-stopChannel:
+		conn, err := net.Dial("tcp", fmt.Sprintf("%s:%s", bindHost, bindPort))
+		if err != nil {
+			log.Println(err)
 			return
-		default:
-			// timeout after 1 second
-			start := time.Now()
-			conn.SetWriteDeadline(time.Now().Add(time.Second))
-			n, err := conn.Write([]byte("hello"))
-			elapsed := time.Since(start)
-			if err != nil {
-				swarm.RecordFailure("tcp", "write failure", elapsed.Nanoseconds()/int64(time.Millisecond), err.Error())
-				continue
-			}
-			// len("hello") == 5
-			if n != 5 {
-				swarm.RecordFailure("tcp", "write mismatch", elapsed.Nanoseconds()/int64(time.Millisecond), "write mismatch")
-				continue
-			}
+		}
+		defer conn.Close()
 
-			conn.SetReadDeadline(time.Now().Add(time.Second))
-			n, err = conn.Read(readBuff)
-			elapsed = time.Since(start)
-			if err != nil {
-				swarm.RecordFailure("tcp", "read failure", elapsed.Nanoseconds()/int64(time.Millisecond), err.Error())
-				continue
-			}
+		readBuff := make([]byte, 5)
 
-			if n != 5 {
-				swarm.RecordFailure("tcp", "read mismatch", elapsed.Nanoseconds()/int64(time.Millisecond), "read mismatch")
-				continue
-			}
+		// Usually, you shouldn't run an infinite loop in worker function, unless you know exactly what you are doing.
+		// It will disable features like rate limit.
+		for {
+			select {
+			case <-stopChannel:
+				return
+			default:
+				// timeout after 1 second
+				start := time.Now()
+				conn.SetWriteDeadline(time.Now().Add(time.Second))
+				n, err := conn.Write([]byte("hello"))
+				elapsed := time.Since(start)
+				if err != nil {
+					bm.RecordFailure("tcp", "write failure", elapsed.Nanoseconds()/int64(time.Millisecond), err.Error())
+					continue
+				}
+				// len("hello") == 5
+				if n != 5 {
+					bm.RecordFailure("tcp", "write mismatch", elapsed.Nanoseconds()/int64(time.Millisecond), "write mismatch")
+					continue
+				}
 
-			swarm.RecordSuccess("tcp", "success", elapsed.Nanoseconds()/int64(time.Millisecond), 5)
+				conn.SetReadDeadline(time.Now().Add(time.Second))
+				n, err = conn.Read(readBuff)
+				elapsed = time.Since(start)
+				if err != nil {
+					bm.RecordFailure("tcp", "read failure", elapsed.Nanoseconds()/int64(time.Millisecond), err.Error())
+					continue
+				}
+
+				if n != 5 {
+					bm.RecordFailure("tcp", "read mismatch", elapsed.Nanoseconds()/int64(time.Millisecond), "read mismatch")
+					continue
+				}
+
+				bm.RecordSuccess("tcp", "success", elapsed.Nanoseconds()/int64(time.Millisecond), 5)
+			}
 		}
 	}
 }
@@ -68,27 +71,28 @@ func main() {
 	log.SetFlags(log.LstdFlags | log.Lshortfile)
 
 	flag.Parse()
+	bm := swarm.NewBoomer("localhost", 5557)
 
 	task := &swarm.Task{
 		Namef:   "tcp",
 		Weightf: 10,
-		Fn:      worker,
+		Fn:      worker(bm),
 	}
 
-	swarm.Events.Subscribe("boomer:spawn", func(workers int, spawnRate float64) {
+	bm.Events.Subscribe("boomer:spawn", func(workers int, spawnRate float64) {
 		stopChannel = make(chan bool)
 	})
 
-	swarm.Events.Subscribe("boomer:stop", func() {
+	bm.Events.Subscribe("boomer:stop", func() {
 		close(stopChannel)
 	})
 
-	swarm.Events.Subscribe("boomer:quit", func() {
+	bm.Events.Subscribe("boomer:quit", func() {
 		close(stopChannel)
 		time.Sleep(time.Second)
 	})
 
-	swarm.Run(task)
+	bm.Run(task)
 }
 
 func init() {

@@ -138,7 +138,7 @@ func waitForQuit() {
 		wg.Done()
 	}()
 
-	swarm.Events.Subscribe("boomer:quit", func() {
+	globalBoomer.Events.Subscribe("boomer:quit", func() {
 		if !quitByMe {
 			wg.Done()
 		}

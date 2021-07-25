@@ -21,47 +21,50 @@ var postFile string
 var contentType string
 var disableKeepalive bool
 
-func worker() {
-	req := fasthttp.AcquireRequest()
-	req.Header.SetMethod(method)
-	req.Header.SetContentType(contentType)
-	if disableKeepalive {
-		req.Header.SetConnectionClose()
-	}
-	req.SetRequestURI(url)
-	if postFile != "" {
-		req.SetBody(postBody)
-	}
-	resp := fasthttp.AcquireResponse()
+func worker(bm *swarm.Boomer) func() {
+	return func() {
 
-	startTime := time.Now()
-	err := client.DoTimeout(req, resp, timeout)
-	elapsed := time.Since(startTime)
-
-	if err != nil {
-		switch err {
-		case fasthttp.ErrTimeout:
-			swarm.RecordFailure("http", "timeout", elapsed.Nanoseconds()/int64(time.Millisecond), err.Error())
-		case fasthttp.ErrNoFreeConns:
-			// all Client.MaxConnsPerHost connections to the requested host are busy
-			// try to increase MaxConnsPerHost
-			swarm.RecordFailure("http", "connections all busy", elapsed.Nanoseconds()/int64(time.Millisecond), err.Error())
-		default:
-			swarm.RecordFailure("http", "unknown", elapsed.Nanoseconds()/int64(time.Millisecond), err.Error())
+		req := fasthttp.AcquireRequest()
+		req.Header.SetMethod(method)
+		req.Header.SetContentType(contentType)
+		if disableKeepalive {
+			req.Header.SetConnectionClose()
 		}
+		req.SetRequestURI(url)
+		if postFile != "" {
+			req.SetBody(postBody)
+		}
+		resp := fasthttp.AcquireResponse()
+
+		startTime := time.Now()
+		err := client.DoTimeout(req, resp, timeout)
+		elapsed := time.Since(startTime)
+
+		if err != nil {
+			switch err {
+			case fasthttp.ErrTimeout:
+				bm.RecordFailure("http", "timeout", elapsed.Nanoseconds()/int64(time.Millisecond), err.Error())
+			case fasthttp.ErrNoFreeConns:
+				// all Client.MaxConnsPerHost connections to the requested host are busy
+				// try to increase MaxConnsPerHost
+				bm.RecordFailure("http", "connections all busy", elapsed.Nanoseconds()/int64(time.Millisecond), err.Error())
+			default:
+				bm.RecordFailure("http", "unknown", elapsed.Nanoseconds()/int64(time.Millisecond), err.Error())
+			}
+			fasthttp.ReleaseRequest(req)
+			fasthttp.ReleaseResponse(resp)
+			return
+		}
+
+		bm.RecordSuccess("http", strconv.Itoa(resp.StatusCode()), elapsed.Nanoseconds()/int64(time.Millisecond), int64(len(resp.Body())))
+
+		if verbose {
+			log.Println(string(resp.Body()))
+		}
+
 		fasthttp.ReleaseRequest(req)
 		fasthttp.ReleaseResponse(resp)
-		return
 	}
-
-	swarm.RecordSuccess("http", strconv.Itoa(resp.StatusCode()), elapsed.Nanoseconds()/int64(time.Millisecond), int64(len(resp.Body())))
-
-	if verbose {
-		log.Println(string(resp.Body()))
-	}
-
-	fasthttp.ReleaseRequest(req)
-	fasthttp.ReleaseResponse(resp)
 }
 
 func main() {
@@ -106,7 +109,7 @@ verbose: %t`, method, url, timeout, postFile, contentType, disableKeepalive, ver
 		}
 		postBody = tmp
 	}
-
+	bm := swarm.NewBoomer("localhost", 5557)
 	client = &fasthttp.Client{
 		MaxConnsPerHost: 2000,
 	}
@@ -114,8 +117,8 @@ verbose: %t`, method, url, timeout, postFile, contentType, disableKeepalive, ver
 	task := &swarm.Task{
 		Namef:   "worker",
 		Weightf: 10,
-		Fn:      worker,
+		Fn:      worker(bm),
 	}
 
-	swarm.Run(task)
+	bm.Run(task)
 }

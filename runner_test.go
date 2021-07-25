@@ -1,6 +1,7 @@
 package swarm
 
 import (
+	"github.com/asaskevich/EventBus"
 	"sync"
 	"sync/atomic"
 	"testing"
@@ -88,7 +89,7 @@ func TestLocalRunner(t *testing.T) {
 		Namef: "TaskA",
 	}
 	tasks := []Tasker{taskA}
-	runner := newLocalRunner(tasks, nil, 2, 2)
+	runner := newLocalRunner(EventBus.New(), tasks, nil, 2, 2)
 	go runner.run()
 	time.Sleep(4 * time.Second)
 	runner.close()
@@ -104,7 +105,7 @@ func TestSpawnWorkers(t *testing.T) {
 	}
 	tasks := []Tasker{taskA}
 
-	runner := newSlaveRunner("localhost", 5557, tasks, nil)
+	runner := newSlaveRunner(EventBus.New(), "localhost", 5557, tasks, nil)
 	defer runner.close()
 
 	runner.client = newClient("localhost", 5557, runner.nodeID)
@@ -140,7 +141,7 @@ func TestSpawnWorkersWithManyTasks(t *testing.T) {
 		createTask(`one`, 1),
 	}
 
-	runner := newSlaveRunner("localhost", 5557, tasks, nil)
+	runner := newSlaveRunner(EventBus.New(), "localhost", 5557, tasks, nil)
 	defer runner.close()
 
 	runner.client = newClient("localhost", 5557, runner.nodeID)
@@ -215,7 +216,7 @@ func TestSpawnWorkersWithManyTasksInWeighingTaskSet(t *testing.T) {
 		Fn:    wts.Run,
 	}
 
-	runner := newSlaveRunner("localhost", 5557, []Tasker{task}, nil)
+	runner := newSlaveRunner(EventBus.New(), "localhost", 5557, []Tasker{task}, nil)
 	defer runner.close()
 
 	runner.client = newClient("localhost", 5557, runner.nodeID)
@@ -282,7 +283,7 @@ func TestSpawnAndStop(t *testing.T) {
 		},
 	}
 	tasks := []Tasker{taskA, taskB}
-	runner := newSlaveRunner("localhost", 5557, tasks, nil)
+	runner := newSlaveRunner(EventBus.New(), "localhost", 5557, tasks, nil)
 	runner.state = stateSpawning
 	defer runner.close()
 	runner.client = newClient("localhost", 5557, runner.nodeID)
@@ -328,15 +329,15 @@ func TestStop(t *testing.T) {
 		},
 	}
 	tasks := []Tasker{taskA}
-	runner := newSlaveRunner("localhost", 5557, tasks, nil)
+	runner := newSlaveRunner(EventBus.New(), "localhost", 5557, tasks, nil)
 	runner.stopChan = make(chan bool)
 
 	stopped := false
 	handler := func() {
 		stopped = true
 	}
-	_ = Events.Subscribe("boomer:stop", handler)
-	defer Events.Unsubscribe("boomer:stop", handler) //nolint:errcheck
+	_ = runner.Events.Subscribe("boomer:stop", handler)
+	defer runner.Events.Unsubscribe("boomer:stop", handler) //nolint:errcheck
 
 	runner.stop()
 
@@ -351,7 +352,7 @@ func TestOnSpawnMessage(t *testing.T) {
 			time.Sleep(time.Second)
 		},
 	}
-	runner := newSlaveRunner("localhost", 5557, []Tasker{taskA}, nil)
+	runner := newSlaveRunner(EventBus.New(), "localhost", 5557, []Tasker{taskA}, nil)
 	defer runner.close()
 	runner.client = newClient("localhost", 5557, runner.nodeID)
 	runner.state = stateInit
@@ -361,8 +362,8 @@ func TestOnSpawnMessage(t *testing.T) {
 		workers = param1
 		spawnRate = param2
 	}
-	_ = Events.Subscribe("boomer:spawn", callback)
-	defer Events.Unsubscribe("boomer:spawn", callback) //nolint:errcheck
+	_ = runner.Events.Subscribe("boomer:spawn", callback)
+	defer runner.Events.Unsubscribe("boomer:spawn", callback) //nolint:errcheck
 
 	go func() {
 		// consumes clearStatsChannel
@@ -387,7 +388,7 @@ func TestOnSpawnMessage(t *testing.T) {
 }
 
 func TestOnQuitMessage(t *testing.T) {
-	runner := newSlaveRunner("localhost", 5557, nil, nil)
+	runner := newSlaveRunner(EventBus.New(), "localhost", 5557, nil, nil)
 	defer runner.close()
 	runner.client = newClient("localhost", 5557, "test")
 	runner.state = stateInit
@@ -396,8 +397,8 @@ func TestOnQuitMessage(t *testing.T) {
 	receiver := func() {
 		quitMessages <- true
 	}
-	_ = Events.Subscribe("boomer:quit", receiver)
-	defer Events.Unsubscribe("boomer:quit", receiver) //nolint:errcheck
+	_ = runner.Events.Subscribe("boomer:quit", receiver)
+	defer runner.Events.Unsubscribe("boomer:quit", receiver) //nolint:errcheck
 	var ticker = time.NewTicker(20 * time.Millisecond)
 
 	runner.onMessage(newMessage("quit", nil, runner.nodeID))
@@ -450,7 +451,7 @@ func TestOnMessage(t *testing.T) {
 	}
 	tasks := []Tasker{taskA, taskB}
 
-	runner := newSlaveRunner("localhost", 5557, tasks, nil)
+	runner := newSlaveRunner(EventBus.New(), "localhost", 5557, tasks, nil)
 	defer runner.close()
 	runner.client = newClient("localhost", 5557, runner.nodeID)
 	runner.state = stateInit
@@ -579,9 +580,9 @@ func TestGetReady(t *testing.T) {
 	server.start()
 
 	rateLimiter := NewStableRateLimiter(100, time.Second)
-	r := newSlaveRunner(masterHost, masterPort, nil, rateLimiter)
+	r := newSlaveRunner(EventBus.New(), masterHost, masterPort, nil, rateLimiter)
 	defer r.close()
-	defer Events.Unsubscribe("boomer:quit", r.onQuiting) //nolint:errcheck
+	defer r.Events.Unsubscribe("boomer:quit", r.onQuiting) //nolint:errcheck
 
 	r.run()
 
@@ -614,7 +615,7 @@ func TestEarlyStop(t *testing.T) {
 		},
 	}
 	tasks := []Tasker{task}
-	runner := newSlaveRunner("localhost", 5557, tasks, nil)
+	runner := newSlaveRunner(EventBus.New(), "localhost", 5557, tasks, nil)
 	defer runner.close()
 	runner.client = newClient("localhost", 5557, runner.nodeID)
 	runner.state = stateInit

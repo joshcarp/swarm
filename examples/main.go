@@ -31,27 +31,29 @@ func bar() {
 	globalBoomer.RecordFailure("udp", "bar", elapsed.Nanoseconds()/int64(time.Millisecond), "udp error")
 }
 
-func waitForQuit() {
-	wg := sync.WaitGroup{}
-	wg.Add(1)
+func waitForQuit(bm *swarm.Boomer)func() {
+	return func() {
+		wg := sync.WaitGroup{}
+		wg.Add(1)
 
-	quitByMe := false
-	go func() {
-		c := make(chan os.Signal)
-		signal.Notify(c, syscall.SIGINT, syscall.SIGTERM)
-		<-c
-		quitByMe = true
-		globalBoomer.Quit()
-		wg.Done()
-	}()
-
-	swarm.Events.Subscribe("boomer:quit", func() {
-		if !quitByMe {
+		quitByMe := false
+		go func() {
+			c := make(chan os.Signal)
+			signal.Notify(c, syscall.SIGINT, syscall.SIGTERM)
+			<-c
+			quitByMe = true
+			globalBoomer.Quit()
 			wg.Done()
-		}
-	})
+		}()
 
-	wg.Wait()
+		bm.Events.Subscribe("boomer:quit", func() {
+			if !quitByMe {
+				wg.Done()
+			}
+		})
+
+		wg.Wait()
+	}
 }
 
 var globalBoomer = swarm.NewBoomer("127.0.0.1", 5557)
@@ -73,6 +75,6 @@ func main() {
 
 	globalBoomer.Run(task1, task2)
 
-	waitForQuit()
+	waitForQuit(globalBoomer)
 	log.Println("shut down")
 }

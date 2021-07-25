@@ -25,34 +25,37 @@ var (
 	req        *HelloRequest
 )
 
-func rpcReq() {
-	startTime := time.Now()
+func rpcReq(bm *swarm.Boomer) func() {
+	return func() {
 
-	// make the request
-	request := &HelloRequest{}
-	request.Name = req.Name
+		startTime := time.Now()
 
-	// init the response
-	resp := new(HelloReply)
-	err := client.Call(request, resp)
+		// make the request
+		request := &HelloRequest{}
+		request.Name = req.Name
 
-	elapsed := time.Since(startTime)
+		// init the response
+		resp := new(HelloReply)
+		err := client.Call(request, resp)
 
-	if err != nil {
-		if verbose {
-			log.Printf("%v\n", err)
-		}
-		swarm.RecordFailure("rpc", "error", 0.0, err.Error())
-	} else {
-		// make your assertion
-		swarm.RecordSuccess("rpc", "succ",
-			elapsed.Nanoseconds()/int64(time.Millisecond), int64(len(resp.String())))
-		if verbose {
-			if err != nil {
+		elapsed := time.Since(startTime)
+
+		if err != nil {
+			if verbose {
 				log.Printf("%v\n", err)
-			} else {
-				log.Printf("Resp Length: %d\n", len(resp.String()))
-				log.Println(resp.String())
+			}
+			bm.RecordFailure("rpc", "error", 0.0, err.Error())
+		} else {
+			// make your assertion
+			bm.RecordSuccess("rpc", "succ",
+				elapsed.Nanoseconds()/int64(time.Millisecond), int64(len(resp.String())))
+			if verbose {
+				if err != nil {
+					log.Printf("%v\n", err)
+				} else {
+					log.Printf("Resp Length: %d\n", len(resp.String()))
+					log.Println(resp.String())
+				}
 			}
 		}
 	}
@@ -71,15 +74,15 @@ func main() {
 		log.Printf("json unmarshal error")
 		return
 	}
-
+	bm := swarm.NewBoomer("localhost", 5557)
 	// init requester
 	client = grequester.NewRequester(addr, service, method, timeout, poolsize)
 
 	task := &swarm.Task{
 		Namef:   "rpcReq",
 		Weightf: 10,
-		Fn:      rpcReq,
+		Fn:      rpcReq(bm),
 	}
 
-	swarm.Run(task)
+	bm.Run(task)
 }

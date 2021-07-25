@@ -66,8 +66,8 @@ func main() {
 	if len(tasks) == 0 {
 		log.Fatalln("No valid plugin found, exit now.")
 	}
-
-	swarm.Run(tasks...)
+	bm := swarm.NewBoomer("localhost", 5557)
+	bm.Run(tasks...)
 }
 
 func init() {

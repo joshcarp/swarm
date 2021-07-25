@@ -31,41 +31,43 @@ var contentType string
 var disableCompression bool
 var disableKeepalive bool
 
-func worker() {
-	request, err := http.NewRequest(method, url, bytes.NewBuffer(postBody))
-	if err != nil {
-		log.Fatalf("%v\n", err)
-	}
-
-	request.Header.Set("Content-Type", contentType)
-
-	startTime := time.Now()
-	response, err := client.Do(request)
-	elapsed := time.Since(startTime)
-
-	if err != nil {
-		if verbose {
-			log.Printf("%v\n", err)
+func worker(bm *swarm.Boomer) func() {
+	return func() {
+		request, err := http.NewRequest(method, url, bytes.NewBuffer(postBody))
+		if err != nil {
+			log.Fatalf("%v\n", err)
 		}
-		swarm.RecordFailure("http", "error", 0.0, err.Error())
-	} else {
-		swarm.RecordSuccess("http", strconv.Itoa(response.StatusCode),
-			elapsed.Nanoseconds()/int64(time.Millisecond), response.ContentLength)
 
-		if verbose {
-			body, err := ioutil.ReadAll(response.Body)
-			if err != nil {
+		request.Header.Set("Content-Type", contentType)
+
+		startTime := time.Now()
+		response, err := client.Do(request)
+		elapsed := time.Since(startTime)
+
+		if err != nil {
+			if verbose {
 				log.Printf("%v\n", err)
+			}
+			bm.RecordFailure("http", "error", 0.0, err.Error())
+		} else {
+			bm.RecordSuccess("http", strconv.Itoa(response.StatusCode),
+				elapsed.Nanoseconds()/int64(time.Millisecond), response.ContentLength)
+
+			if verbose {
+				body, err := ioutil.ReadAll(response.Body)
+				if err != nil {
+					log.Printf("%v\n", err)
+				} else {
+					log.Printf("Status Code: %d\n", response.StatusCode)
+					log.Println(string(body))
+				}
+
 			} else {
-				log.Printf("Status Code: %d\n", response.StatusCode)
-				log.Println(string(body))
+				io.Copy(ioutil.Discard, response.Body)
 			}
 
-		} else {
-			io.Copy(ioutil.Discard, response.Body)
+			response.Body.Close()
 		}
-
-		response.Body.Close()
 	}
 }
 
@@ -111,7 +113,7 @@ verbose: %t`, method, url, timeout, postFile, contentType, disableCompression, d
 		}
 		postBody = tmp
 	}
-
+	bm := swarm.NewBoomer("localhost", 5557)
 	http.DefaultTransport.(*http.Transport).MaxIdleConnsPerHost = 2000
 	tr := &http.Transport{
 		TLSClientConfig: &tls.Config{
@@ -129,8 +131,8 @@ verbose: %t`, method, url, timeout, postFile, contentType, disableCompression, d
 	task := &swarm.Task{
 		Namef:   "worker",
 		Weightf: 10,
-		Fn:      worker,
+		Fn:      worker(bm),
 	}
 
-	swarm.Run(task)
+	bm.Run(task)
 }

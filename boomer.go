@@ -1,21 +1,17 @@
 package swarm
 
 import (
-	"flag"
 	"log"
-	"os"
-	"os/signal"
 	"strings"
-	"syscall"
 	"time"
 
 	"github.com/asaskevich/EventBus"
 )
 
 // Events is the global event bus instance.
-var Events = EventBus.New()
+//var Events = EventBus.New()
 
-var defaultBoomer = &Boomer{}
+//var defaultBoomer = &Boomer{}
 
 // Mode is the running mode of boomer, both standalone and distributed are supported.
 type Mode int
@@ -47,6 +43,8 @@ type Boomer struct {
 	memoryProfileDuration time.Duration
 
 	outputs []Output
+
+	Events EventBus.Bus
 }
 
 // NewBoomer returns a new Boomer.
@@ -55,6 +53,7 @@ func NewBoomer(masterHost string, masterPort int) *Boomer {
 		masterHost: masterHost,
 		masterPort: masterPort,
 		mode:       DistributedMode,
+		Events:     EventBus.New(),
 	}
 }
 
@@ -64,6 +63,7 @@ func NewStandaloneBoomer(spawnCount int, spawnRate float64) *Boomer {
 		spawnCount: spawnCount,
 		spawnRate:  spawnRate,
 		mode:       StandaloneMode,
+		Events:     EventBus.New(),
 	}
 }
 
@@ -119,13 +119,13 @@ func (b *Boomer) Run(tasks ...Tasker) {
 
 	switch b.mode {
 	case DistributedMode:
-		b.slaveRunner = newSlaveRunner(b.masterHost, b.masterPort, tasks, b.rateLimiter)
+		b.slaveRunner = newSlaveRunner(b.Events, b.masterHost, b.masterPort, tasks, b.rateLimiter)
 		for _, o := range b.outputs {
 			b.slaveRunner.addOutput(o)
 		}
 		b.slaveRunner.run()
 	case StandaloneMode:
-		b.localRunner = newLocalRunner(tasks, b.rateLimiter, b.spawnCount, b.spawnRate)
+		b.localRunner = newLocalRunner(b.Events, tasks, b.rateLimiter, b.spawnCount, b.spawnRate)
 		for _, o := range b.outputs {
 			b.localRunner.addOutput(o)
 		}
@@ -183,7 +183,7 @@ func (b *Boomer) RecordFailure(requestType, name string, responseTime int64, exc
 
 // Quit will send a quit message to the master.
 func (b *Boomer) Quit() {
-	Events.Publish("boomer:quit")
+	b.Events.Publish("boomer:quit")
 	var ticker = time.NewTicker(3 * time.Second)
 
 	switch b.mode {
@@ -203,7 +203,7 @@ func (b *Boomer) Quit() {
 }
 
 // Run tasks without connecting to the master.
-func runTasksForTest(tasks ...Tasker) {
+func runTasksForTest(runTasks string, tasks ...Tasker) {
 	taskNames := strings.Split(runTasks, ",")
 	for _, task := range tasks {
 		if task.Name() == "" {
@@ -217,64 +217,4 @@ func runTasksForTest(tasks ...Tasker) {
 			}
 		}
 	}
-}
-
-// Run accepts a slice of Task and connects to a locust master.
-// It's a convenience function to use the defaultBoomer.
-func Run(tasks ...Tasker) {
-	if !flag.Parsed() {
-		flag.Parse()
-	}
-
-	if runTasks != "" {
-		runTasksForTest(tasks...)
-		return
-	}
-
-	initLegacyEventHandlers()
-
-	rateLimiter, err := createRateLimiter(maxRPS, requestIncreaseRate)
-	if err != nil {
-		log.Fatalf("%v\n", err)
-	}
-	defaultBoomer.SetRateLimiter(rateLimiter)
-	defaultBoomer.masterHost = masterHost
-	defaultBoomer.masterPort = masterPort
-	defaultBoomer.EnableMemoryProfile(memoryProfile, memoryProfileDuration)
-	defaultBoomer.EnableCPUProfile(cpuProfile, cpuProfileDuration)
-
-	defaultBoomer.Run(tasks...)
-
-	quitByMe := false
-	quitChan := make(chan bool)
-
-	_ = Events.SubscribeOnce("boomer:quit", func() {
-		if !quitByMe {
-			close(quitChan)
-		}
-	})
-
-	c := make(chan os.Signal, 1)
-	signal.Notify(c, syscall.SIGINT, syscall.SIGTERM)
-
-	select {
-	case <-c:
-		quitByMe = true
-		defaultBoomer.Quit()
-	case <-quitChan:
-	}
-
-	log.Println("shut down")
-}
-
-// RecordSuccess reports a success.
-// It's a convenience function to use the defaultBoomer.
-func RecordSuccess(requestType, name string, responseTime int64, responseLength int64) {
-	defaultBoomer.RecordSuccess(requestType, name, responseTime, responseLength)
-}
-
-// RecordFailure reports a failure.
-// It's a convenience function to use the defaultBoomer.
-func RecordFailure(requestType, name string, responseTime int64, exception string) {
-	defaultBoomer.RecordFailure(requestType, name, responseTime, exception)
 }

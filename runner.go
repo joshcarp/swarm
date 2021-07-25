@@ -2,6 +2,7 @@ package swarm
 
 import (
 	"fmt"
+	"github.com/asaskevich/EventBus"
 	"log"
 	"math/rand"
 	"os"
@@ -46,6 +47,7 @@ type runner struct {
 	closeChan chan bool //nolint:structcheck
 
 	outputs []Output
+	Events  EventBus.Bus
 }
 
 // safeRun runs fn and recovers from unexpected panics.
@@ -198,8 +200,8 @@ func (r *runner) getTask() Tasker {
 }
 
 func (r *runner) startSpawning(spawnCount int, spawnRate float64, spawnCompleteFunc func()) {
-	Events.Publish("boomer:hatch", spawnCount, spawnRate)
-	Events.Publish("boomer:spawn", spawnCount, spawnRate)
+	r.Events.Publish("boomer:hatch", spawnCount, spawnRate)
+	r.Events.Publish("boomer:spawn", spawnCount, spawnRate)
 
 	r.stats.clearStatsChan <- true
 	r.stopChan = make(chan bool)
@@ -213,7 +215,7 @@ func (r *runner) startSpawning(spawnCount int, spawnRate float64, spawnCompleteF
 func (r *runner) stop() {
 	// publish the boomer stop event
 	// user's code can subscribe to this event and do thins like cleaning up
-	Events.Publish("boomer:stop")
+	r.Events.Publish("boomer:stop")
 
 	// stop previous goroutines without blocking
 	// those goroutines will exit when r.safeRun returns
@@ -229,8 +231,9 @@ type localRunner struct {
 	spawnCount int
 }
 
-func newLocalRunner(tasks []Tasker, rateLimiter RateLimiter, spawnCount int, spawnRate float64) (r *localRunner) {
+func newLocalRunner(events EventBus.Bus, tasks []Tasker, rateLimiter RateLimiter, spawnCount int, spawnRate float64) (r *localRunner) {
 	r = &localRunner{}
+	r.Events = events
 	r.setTasks(tasks)
 	r.spawnRate = spawnRate
 	r.spawnCount = spawnCount
@@ -259,7 +262,7 @@ func (r *localRunner) run() {
 				data["user_count"] = r.numClients
 				r.outputOnEevent(data)
 			case <-r.closeChan:
-				Events.Publish("boomer:quit")
+				r.Events.Publish("boomer:quit")
 				r.stop()
 				wg.Done()
 				return
@@ -292,8 +295,9 @@ type slaveRunner struct {
 	client     client
 }
 
-func newSlaveRunner(masterHost string, masterPort int, tasks []Tasker, rateLimiter RateLimiter) (r *slaveRunner) {
+func newSlaveRunner(events EventBus.Bus, masterHost string, masterPort int, tasks []Tasker, rateLimiter RateLimiter) (r *slaveRunner) {
 	r = &slaveRunner{}
+	r.Events = events
 	r.masterHost = masterHost
 	r.masterPort = masterPort
 	r.setTasks(tasks)
@@ -364,7 +368,7 @@ func (r *slaveRunner) onMessage(msg *message) {
 			r.state = stateSpawning
 			r.onSpawnMessage(msg)
 		case "quit":
-			Events.Publish("boomer:quit")
+			r.Events.Publish("boomer:quit")
 		}
 	case stateSpawning:
 		fallthrough
@@ -384,7 +388,7 @@ func (r *slaveRunner) onMessage(msg *message) {
 		case "quit":
 			r.stop()
 			log.Println("Recv quit message from master, all the goroutines are stopped")
-			Events.Publish("boomer:quit")
+			r.Events.Publish("boomer:quit")
 			r.state = stateInit
 		}
 	case stateStopped:
@@ -393,7 +397,7 @@ func (r *slaveRunner) onMessage(msg *message) {
 			r.state = stateSpawning
 			r.onSpawnMessage(msg)
 		case "quit":
-			Events.Publish("boomer:quit")
+			r.Events.Publish("boomer:quit")
 			r.state = stateInit
 		}
 	}
@@ -423,7 +427,7 @@ func (r *slaveRunner) run() {
 		} else {
 			log.Printf("Failed to connect to master(%s:%d) with error %v\n", r.masterHost, r.masterPort, err)
 		}
-		Events.Publish("connect:fail")
+		r.Events.Publish("connect:fail")
 		return
 	}
 
@@ -471,5 +475,5 @@ func (r *slaveRunner) run() {
 		}
 	}()
 
-	_ = Events.Subscribe("boomer:quit", r.onQuiting)
+	_ = r.Events.Subscribe("boomer:quit", r.onQuiting)
 }
