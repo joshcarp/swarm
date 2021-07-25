@@ -3,10 +3,8 @@
 package swarm
 
 import (
-	"fmt"
 	"log"
 	"math"
-	"reflect"
 	"time"
 )
 
@@ -26,18 +24,4 @@ func createRateLimiter(maxRPS int64, requestIncreaseRate string) (rateLimiter Ra
 		}
 	}
 	return rateLimiter, err
-}
-
-// According to locust, responseTime should be int64, in milliseconds.
-// But previous version of boomer required responseTime to be float64, so sad.
-func convertResponseTime(origin interface{}) int64 {
-	responseTime := int64(0)
-	if _, ok := origin.(float64); ok {
-		responseTime = int64(origin.(float64))
-	} else if _, ok := origin.(int64); ok {
-		responseTime = origin.(int64)
-	} else {
-		panic(fmt.Sprintf("responseTime should be float64 or int64, not %s", reflect.TypeOf(origin)))
-	}
-	return responseTime
 }
