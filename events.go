@@ -1,9 +1,9 @@
 package swarm
 
 const (
-	EventSpawn = "spawn"
-	EventStop  = "stop"
-	EventHatch = "hatch"
-	EventQuit  = "quit"
-	EventFail  = "fail"
+	EventSpawn = "swarm:spawn"
+	EventStop  = "swarm:stop"
+	EventHatch = "swarm:hatch"
+	EventQuit  = "swarm:quit"
+	EventFail  = "swarm:fail"
 )
