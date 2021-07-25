@@ -157,8 +157,8 @@ func deadend() {
 
 func main() {
 	bm := swarm.NewSwarmer("localhost", 5557)
-	bm.Events.Subscribe("boome:spawn", startTest)
-	bm.Events.Subscribe("swarmer:stop", stopTest)
+	bm.Events.Subscribe(swarm.EventSpawn, startTest)
+	bm.Events.Subscribe(swarm.EventStop, stopTest)
 
 	task := &swarm.Task{
 		Namef:   "udproxy",

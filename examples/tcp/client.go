@@ -79,15 +79,15 @@ func main() {
 		Fn:      worker(bm),
 	}
 
-	bm.Events.Subscribe("swarmer:spawn", func(workers int, spawnRate float64) {
+	bm.Events.Subscribe(swarm.EventSpawn, func(workers int, spawnRate float64) {
 		stopChannel = make(chan bool)
 	})
 
-	bm.Events.Subscribe("swarmer:stop", func() {
+	bm.Events.Subscribe(swarm.EventStop, func() {
 		close(stopChannel)
 	})
 
-	bm.Events.Subscribe("swarmer:quit", func() {
+	bm.Events.Subscribe(swarm.EventQuit, func() {
 		close(stopChannel)
 		time.Sleep(time.Second)
 	})

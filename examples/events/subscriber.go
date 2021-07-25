@@ -21,15 +21,15 @@ func foo(bm *swarm.Swarmer) func(){
 func main() {
 	log.SetFlags(log.LstdFlags | log.Lshortfile)
 	bm := swarm.NewSwarmer("localhost", 5557)
-	bm.Events.Subscribe("swarmer:spawn", func(workers int, spawnRate float64) {
+	bm.Events.Subscribe(swarm.EventSpawn, func(workers int, spawnRate float64) {
 		log.Println("The master asks me to spawn", workers, "goroutines with a spawn rate of", spawnRate, "per second.")
 	})
 
-	bm.Events.Subscribe("swarmer:stop", func() {
+	bm.Events.Subscribe(swarm.EventStop, func() {
 		log.Println("The master asks me to stop.")
 	})
 
-	bm.Events.Subscribe("swarmer:quit", func() {
+	bm.Events.Subscribe(swarm.EventQuit, func() {
 		log.Println("Swarmer is quitting now, may be the master asks it to do so, or it receives one of SIGINT and SIGTERM.")
 	})
 

@@ -336,8 +336,8 @@ func TestStop(t *testing.T) {
 	handler := func() {
 		stopped = true
 	}
-	_ = runner.Events.Subscribe("swarmer:stop", handler)
-	defer runner.Events.Unsubscribe("swarmer:stop", handler) //nolint:errcheck
+	_ = runner.Events.Subscribe(EventStop, handler)
+	defer runner.Events.Unsubscribe(EventStop, handler) //nolint:errcheck
 
 	runner.stop()
 
@@ -362,8 +362,8 @@ func TestOnSpawnMessage(t *testing.T) {
 		workers = param1
 		spawnRate = param2
 	}
-	_ = runner.Events.Subscribe("swarmer:spawn", callback)
-	defer runner.Events.Unsubscribe("swarmer:spawn", callback) //nolint:errcheck
+	_ = runner.Events.Subscribe(EventSpawn, callback)
+	defer runner.Events.Unsubscribe(EventSpawn, callback) //nolint:errcheck
 
 	go func() {
 		// consumes clearStatsChannel
@@ -397,8 +397,8 @@ func TestOnQuitMessage(t *testing.T) {
 	receiver := func() {
 		quitMessages <- true
 	}
-	_ = runner.Events.Subscribe("swarmer:quit", receiver)
-	defer runner.Events.Unsubscribe("swarmer:quit", receiver) //nolint:errcheck
+	_ = runner.Events.Subscribe(EventQuit, receiver)
+	defer runner.Events.Unsubscribe(EventQuit, receiver) //nolint:errcheck
 	var ticker = time.NewTicker(20 * time.Millisecond)
 
 	runner.onMessage(newMessage("quit", nil, runner.nodeID))
@@ -582,7 +582,7 @@ func TestGetReady(t *testing.T) {
 	rateLimiter := NewStableRateLimiter(100, time.Second)
 	r := newSlaveRunner(EventBus.New(), masterHost, masterPort, nil, rateLimiter)
 	defer r.close()
-	defer r.Events.Unsubscribe("swarmer:quit", r.onQuiting) //nolint:errcheck
+	defer r.Events.Unsubscribe(EventQuit, r.onQuiting) //nolint:errcheck
 
 	r.run()
 

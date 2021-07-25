@@ -200,8 +200,8 @@ func (r *runner) getTask() Tasker {
 }
 
 func (r *runner) startSpawning(spawnCount int, spawnRate float64, spawnCompleteFunc func()) {
-	r.Events.Publish("swarmer:hatch", spawnCount, spawnRate)
-	r.Events.Publish("swarmer:spawn", spawnCount, spawnRate)
+	r.Events.Publish(EventHatch, spawnCount, spawnRate)
+	r.Events.Publish(EventSpawn, spawnCount, spawnRate)
 
 	r.stats.clearStatsChan <- true
 	r.stopChan = make(chan bool)
@@ -215,7 +215,7 @@ func (r *runner) startSpawning(spawnCount int, spawnRate float64, spawnCompleteF
 func (r *runner) stop() {
 	// publish the swarmer stop event
 	// user's code can subscribe to this event and do thins like cleaning up
-	r.Events.Publish("swarmer:stop")
+	r.Events.Publish(EventStop)
 
 	// stop previous goroutines without blocking
 	// those goroutines will exit when r.safeRun returns
@@ -262,7 +262,7 @@ func (r *localRunner) run() {
 				data["user_count"] = r.numClients
 				r.outputOnEevent(data)
 			case <-r.closeChan:
-				r.Events.Publish("swarmer:quit")
+				r.Events.Publish(EventQuit)
 				r.stop()
 				wg.Done()
 				return
@@ -368,7 +368,7 @@ func (r *slaveRunner) onMessage(msg *message) {
 			r.state = stateSpawning
 			r.onSpawnMessage(msg)
 		case "quit":
-			r.Events.Publish("swarmer:quit")
+			r.Events.Publish(EventQuit)
 		}
 	case stateSpawning:
 		fallthrough
@@ -388,7 +388,7 @@ func (r *slaveRunner) onMessage(msg *message) {
 		case "quit":
 			r.stop()
 			log.Println("Recv quit message from master, all the goroutines are stopped")
-			r.Events.Publish("swarmer:quit")
+			r.Events.Publish(EventQuit)
 			r.state = stateInit
 		}
 	case stateStopped:
@@ -397,7 +397,7 @@ func (r *slaveRunner) onMessage(msg *message) {
 			r.state = stateSpawning
 			r.onSpawnMessage(msg)
 		case "quit":
-			r.Events.Publish("swarmer:quit")
+			r.Events.Publish(EventQuit)
 			r.state = stateInit
 		}
 	}
@@ -427,7 +427,7 @@ func (r *slaveRunner) run() {
 		} else {
 			log.Printf("Failed to connect to master(%s:%d) with error %v\n", r.masterHost, r.masterPort, err)
 		}
-		r.Events.Publish("connect:fail")
+		r.Events.Publish(EventFail)
 		return
 	}
 
@@ -475,5 +475,5 @@ func (r *slaveRunner) run() {
 		}
 	}()
 
-	_ = r.Events.Subscribe("swarmer:quit", r.onQuiting)
+	_ = r.Events.Subscribe(EventQuit, r.onQuiting)
 }

@@ -178,7 +178,7 @@ func (b *Swarmer) RecordFailure(requestType, name string, responseTime int64, ex
 
 // Quit will send a quit message to the master.
 func (b *Swarmer) Quit() {
-	b.Events.Publish("swarmer:quit")
+	b.Events.Publish(EventQuit)
 	var ticker = time.NewTicker(3 * time.Second)
 
 	switch b.mode {
