@@ -8,6 +8,7 @@ import (
 	"math/rand"
 	"os"
 	"runtime"
+	"sync"
 	"sync/atomic"
 	"testing"
 	"time"
@@ -268,7 +269,8 @@ func TestCreateRatelimiter(t *testing.T) {
 
 func TestRun(t *testing.T) {
 	flag.Parse()
-
+	var wg sync.WaitGroup
+	wg.Add(10)
 	masterHost := "0.0.0.0"
 	rand.Seed(Now())
 	masterPort := rand.Intn(1000) + 10240
@@ -286,6 +288,7 @@ func TestRun(t *testing.T) {
 		Namef: "increaseCount",
 		Fn: func() {
 			atomic.AddInt64(&count, 1)
+			wg.Done()
 			runtime.Goexit()
 		},
 	}
@@ -300,6 +303,7 @@ func TestRun(t *testing.T) {
 
 	time.Sleep(4 * time.Second)
 
+	wg.Wait()
 	bm.Quit()
 
 	if count != 10 {
