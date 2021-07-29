@@ -138,7 +138,7 @@ func waitForQuit() {
 		wg.Done()
 	}()
 
-	globalSwarmer.Events.Subscribe(swarm.EventQuit, func() {
+	globalSwarmer.Bus.Subscribe(swarm.EventQuit, func() {
 		if !quitByMe {
 			wg.Done()
 		}

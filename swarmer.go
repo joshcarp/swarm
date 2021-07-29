@@ -39,7 +39,7 @@ type Swarmer struct {
 
 	outputs []Output
 
-	Events EventBus.Bus
+	EventBus.Bus
 }
 
 // NewSwarmer returns a new Swarmer.
@@ -48,7 +48,7 @@ func NewSwarmer(masterHost string, masterPort int) *Swarmer {
 		masterHost: masterHost,
 		masterPort: masterPort,
 		mode:       DistributedMode,
-		Events:     EventBus.New(),
+		Bus:        EventBus.New(),
 	}
 }
 
@@ -58,7 +58,7 @@ func NewStandaloneSwarmer(spawnCount int, spawnRate float64) *Swarmer {
 		spawnCount: spawnCount,
 		spawnRate:  spawnRate,
 		mode:       StandaloneMode,
-		Events:     EventBus.New(),
+		Bus:        EventBus.New(),
 	}
 }
 
@@ -114,13 +114,13 @@ func (b *Swarmer) Run(tasks ...Tasker) {
 
 	switch b.mode {
 	case DistributedMode:
-		b.slaveRunner = newSlaveRunner(b.Events, b.masterHost, b.masterPort, tasks, b.rateLimiter)
+		b.slaveRunner = newSlaveRunner(b.Bus, b.masterHost, b.masterPort, tasks, b.rateLimiter)
 		for _, o := range b.outputs {
 			b.slaveRunner.addOutput(o)
 		}
 		b.slaveRunner.run()
 	case StandaloneMode:
-		b.localRunner = newLocalRunner(b.Events, tasks, b.rateLimiter, b.spawnCount, b.spawnRate)
+		b.localRunner = newLocalRunner(b.Bus, tasks, b.rateLimiter, b.spawnCount, b.spawnRate)
 		for _, o := range b.outputs {
 			b.localRunner.addOutput(o)
 		}
@@ -178,7 +178,7 @@ func (b *Swarmer) RecordFailure(requestType, name string, responseTime int64, ex
 
 // Quit will send a quit message to the master.
 func (b *Swarmer) Quit() {
-	b.Events.Publish(EventQuit)
+	b.Bus.Publish(EventQuit)
 	var ticker = time.NewTicker(3 * time.Second)
 
 	switch b.mode {

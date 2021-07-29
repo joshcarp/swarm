@@ -46,7 +46,7 @@ func waitForQuit(bm *swarm.Swarmer)func() {
 			wg.Done()
 		}()
 
-		bm.Events.Subscribe(swarm.EventQuit, func() {
+		bm.Bus.Subscribe(swarm.EventQuit, func() {
 			if !quitByMe {
 				wg.Done()
 			}
