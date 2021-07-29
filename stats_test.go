@@ -139,6 +139,7 @@ func TestClearAllByChannel(t *testing.T) {
 	defer newStats.close()
 	newStats.logRequest("http", "success", 1, 20)
 	newStats.clearStatsChan <- true
+	time.Sleep(time.Second)
 
 	if newStats.total.numRequests != 0 {
 		t.Error("After clearAll(), newStats.total.numRequests is wrong, expected: 0, got:", newStats.total.numRequests)
