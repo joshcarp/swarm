@@ -437,6 +437,7 @@ func (r *slaveRunner) run() {
 	r.stats.start()
 
 	// tell master, I'm ready
+	r.Events.Publish(EventConnected)
 	r.client.sendChannel() <- newMessage("client_ready", nil, r.nodeID)
 
 	// report to master
