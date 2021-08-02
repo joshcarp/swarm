@@ -252,6 +252,7 @@ func newLocalRunner(events EventBus.Bus, tasks []Tasker, rateLimiter RateLimiter
 func (r *localRunner) run() {
 	r.state = stateInit
 	r.stats.start()
+	r.Events.Publish(EventConnected)
 
 	wg := sync.WaitGroup{}
 	wg.Add(1)
