@@ -14,9 +14,9 @@ require (
 	github.com/stretchr/testify v1.7.0
 	github.com/tklauser/go-sysconf v0.3.7 // indirect
 	github.com/ugorji/go/codec v1.2.6
-	github.com/valyala/fasthttp v1.28.0
+	github.com/valyala/fasthttp v1.34.0
 	github.com/yuin/gopher-lua v0.0.0-20210529063254-f4c35e4016d9
-	github.com/zeromq/goczmq v4.1.0+incompatible // indirect
+	github.com/zeromq/goczmq v4.1.0+incompatible
 	github.com/zeromq/gomq v0.0.0-20201031135124-cef4e507bb8e
 	github.com/zeromq/gomq/zmtp v0.0.0-20201031135124-cef4e507bb8e
 	go.etcd.io/etcd/client/v3 v3.5.0
